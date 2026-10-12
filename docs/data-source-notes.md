@@ -50,6 +50,15 @@ Coverage is documented as FY2020–FY2025. Fields are omitted (not `null`) when 
 - **Rate-limit headers**: responses include `x-ratelimit-remaining`, `x-ratelimit-monthly-remaining` and `x-ratelimit-reset`. The first month's limit is prorated (1,800 for a key created on 2026-10-12).
 - **Unknown company**: `GET /companies/{code}` returns `404` with `{"error":{"code":"not_found",...}}`.
 
+### Coverage and data quality (checked 2026-10-12)
+
+- **Not every company has diversity data.** Search covers all 3,979 companies in EDINET DB (3,810 currently listed), but disclosure is only mandatory for larger employers: female manager ratio and pay gap for companies with 301+ employees; male parental leave for 1,000+ employees (300+ from April 2025). Smaller companies often show nothing.
+- **Small companies give extreme values.** E.g. 100% female managers when a company has only a handful of managers. Always read figures together with headcount.
+- **Extraction errors exist.** The parental leave ranking includes a value of 10,000% (リンコーコーポレーション, FY2026). Values above ~200% can be legitimate under the legal formula; 10,000% is not.
+- **Reporting formats differ.** The law asks for women's pay as a percentage of men's, but some companies file the difference instead. Mercari's FY2026 filing reports 29.26 (all workers), which EDINET DB stores as `0.2926`; the real ratio is about 71%. Values cannot be converted automatically, because a low ratio can also be genuine (e.g. retailers with many female part-timers).
+- **What the app does:** `lib/metrics.ts` defines a plausible range per metric (ratios 0–100%, parental leave 0–500%, pay ratio 35–150%). Values outside it are shown with ⚠ and excluded from highest/lowest markers on the compare page. The source filing link is always shown so users can check.
+- **Ranking endpoint**: `/v1/rankings/{metric}` returns at most the top 500 companies and omits `name_en`, so it cannot be used to measure full coverage.
+
 ### Still to fill from elsewhere
 
 - **えるぼし / くるみん certifications**: not provided by EDINET DB. These come from the Ministry of Health, Labour and Welfare and would need a separate source.
