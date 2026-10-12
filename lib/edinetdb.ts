@@ -32,6 +32,7 @@ export type CompanyDetail = CompanySummary & {
   accounting_standard?: string | null;
   latest_fiscal_year?: number | null;
   hq_address?: string | null;
+  corporate_number?: string | null; // 法人番号, links to MHLW data
 };
 
 // One row per fiscal year. Fields are omitted when the company did not report them.
@@ -49,6 +50,7 @@ export type FinancialYear = {
   avg_age?: number | null;
   avg_tenure_years?: number | null;
   num_employees?: number | null; // consolidated
+  revenue?: number | null; // consolidated, JPY
 };
 
 async function request<T>(path: string): Promise<T> {

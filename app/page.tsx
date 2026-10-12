@@ -4,9 +4,10 @@ import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
 import { MetricValue } from "@/components/metric-value";
-import { getFinancials, searchCompanies } from "@/lib/edinetdb";
-import { FEATURED_COMPANIES } from "@/lib/featured";
-import { CORE_METRICS, latestWorkplaceYear, METRICS } from "@/lib/metrics";
+import { FEATURED_COMPANIES } from "@/lib/companies";
+import { searchCompanies } from "@/lib/edinetdb";
+import { CORE_METRICS, METRICS } from "@/lib/metrics";
+import { getEmployerProfile } from "@/lib/profile";
 
 const MAX_QUERY_LENGTH = 50;
 
@@ -37,9 +38,9 @@ export default function Home({ searchParams }: PageProps<"/">) {
           <FeaturedCompanies />
         </Suspense>
         <p className="text-xs text-black/60 dark:text-white/60">
-          Latest fiscal year with workplace data. ⚠ marks an unusual value (a
-          possible data error or a different reporting format): check the
-          source filing on the company page.
+          Latest fiscal year with workplace data. Figures tagged MHLW fill gaps
+          in the securities report from the government&apos;s women&apos;s
+          advancement database. ⚠ marks an unusual value: check the source.
         </p>
       </section>
     </div>
@@ -134,16 +135,16 @@ async function FeaturedCompanies() {
   const cards = await Promise.all(
     FEATURED_COMPANIES.map(async (company) => {
       try {
-        return { company, latest: latestWorkplaceYear(await getFinancials(company.code)) };
+        return { company, profile: await getEmployerProfile(company.code, company.corporateNumber) };
       } catch {
-        return { company, latest: undefined };
+        return { company, profile: undefined };
       }
     }),
   );
 
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
-      {cards.map(({ company, latest }) => (
+      {cards.map(({ company, profile }) => (
         <li
           key={company.code}
           className="flex flex-col gap-3 rounded-md border border-black/10 p-4 dark:border-white/15"
@@ -153,7 +154,7 @@ async function FeaturedCompanies() {
               <div className="font-medium">{company.name}</div>
               <div className="text-xs text-black/60 dark:text-white/60">
                 {company.nameJa} · {company.industry}
-                {latest && ` · FY${latest.fiscal_year}`}
+                {profile?.latestFiling && ` · FY${profile.latestFiling.fiscal_year}`}
               </div>
             </Link>
             <CompareButton code={company.code} name={company.name} />
@@ -163,7 +164,7 @@ async function FeaturedCompanies() {
               <div key={key}>
                 <dt className="text-black/60 dark:text-white/60">{METRICS[key].label}</dt>
                 <dd className="mt-0.5 text-base font-semibold tabular-nums">
-                  <MetricValue metric={key} value={latest?.[key]} />
+                  <MetricValue metric={key} value={profile?.values[key]} />
                 </dd>
               </div>
             ))}

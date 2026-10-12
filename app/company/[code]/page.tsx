@@ -4,13 +4,34 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
-import { MetricValue } from "@/components/metric-value";
+import { CorrectedTag, MetricValue, SourceTag } from "@/components/metric-value";
+import { WorkplaceBadges } from "@/components/workplace-badges";
 import { edinetDocumentUrl, isEdinetCode } from "@/lib/edinet-code";
 import { getCompany, getFinancials, type FinancialYear } from "@/lib/edinetdb";
-import { ALL_METRICS, CORE_METRICS, hasWorkplaceData, METRICS } from "@/lib/metrics";
+import {
+  buildProfile,
+  CORE_METRICS,
+  hasWorkplaceData,
+  METRIC_GROUPS,
+  METRICS,
+  type EmployerProfile,
+  type MetricKey,
+} from "@/lib/metrics";
+import { getCorrections } from "@/lib/corrections";
+import { getMhlwRecord } from "@/lib/mhlw";
 
 // Number of most recent fiscal years shown in the history table.
 const YEARS_SHOWN = 3;
+
+// Extra figures shown below the core three.
+const MORE_METRICS: MetricKey[] = [
+  "overtime_hours",
+  "paid_leave_ratio",
+  "avg_annual_salary",
+  "avg_tenure_years",
+  "revenue_growth",
+  "female_director_ratio",
+];
 
 // Cache Components requires at least one prerendered param; other companies
 // render on first visit and are then cached.
@@ -55,8 +76,10 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
   if (!company) notFound();
 
   const displayName = company.name_en || company.name;
-  const years = financials.filter(hasWorkplaceData).slice(-YEARS_SHOWN);
-  const latest = years.at(-1);
+  const profile = buildProfile(financials, getMhlwRecord(company.corporate_number), getCorrections(code));
+  const hasCore = CORE_METRICS.some((key) => profile.values[key]);
+  const filing = profile.latestFiling;
+  const history = financials.filter(hasWorkplaceData).slice(-YEARS_SHOWN);
 
   return (
     <>
@@ -72,60 +95,99 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
         <CompareButton code={company.edinet_code} name={displayName} />
       </section>
 
-      {!latest ? (
-        <p className="text-sm text-black/70 dark:text-white/70">
-          No workplace diversity figures were found in this company&apos;s
-          available filings. Companies with 300 or fewer employees are not
-          required to disclose them.
-        </p>
-      ) : (
-        <>
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">
-              Latest disclosure{" "}
-              <span className="font-normal text-black/60 dark:text-white/60">
-                (FY{latest.fiscal_year})
-              </span>
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {CORE_METRICS.map((key) => (
-                <div key={key} className="rounded-md border border-black/10 p-4 dark:border-white/15">
-                  <div className="text-sm text-black/70 dark:text-white/70">{METRICS[key].label}</div>
-                  <div className="mt-1 text-2xl font-semibold">
-                    <MetricValue metric={key} value={latest[key]} emptyLabel="Not disclosed" />
-                  </div>
-                  <p className="mt-2 text-xs text-black/60 dark:text-white/60">{METRICS[key].help}</p>
-                </div>
-              ))}
-            </div>
-            {latest.doc_id && (
-              <a
-                href={edinetDocumentUrl(latest.doc_id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-sm underline"
-              >
-                View the FY{latest.fiscal_year} securities report on EDINET ↗
-              </a>
-            )}
-          </section>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">
+          Mandatory disclosures{" "}
+          {filing && hasWorkplaceData(filing) && (
+            <span className="font-normal text-black/60 dark:text-white/60">(FY{filing.fiscal_year})</span>
+          )}
+        </h2>
+        {hasCore ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {CORE_METRICS.map((key) => (
+              <MetricCard key={key} metric={key} profile={profile} emptyLabel="No data" />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-black/70 dark:text-white/70">
+            No workplace diversity figures were found for this company.
+            Companies with 300 or fewer employees are not required to disclose them.
+          </p>
+        )}
+        {filing?.doc_id && (
+          <a
+            href={edinetDocumentUrl(filing.doc_id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-sm underline"
+          >
+            View the FY{filing.fiscal_year} securities report on EDINET ↗
+          </a>
+        )}
+      </section>
 
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Recent years</h2>
-            <HistoryTable years={years} />
-            <p className="text-xs text-black/60 dark:text-white/60">
-              FY = the fiscal year ending in that calendar year. Workplace
-              figures and average salary cover the filing company itself;
-              employee count is for the whole group. ⚠ marks an unusual value
-              (a possible data error or a different reporting format): check
-              the source filing.
-            </p>
-          </section>
-        </>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Work-life balance, pay and growth</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {MORE_METRICS.map((key) => (
+            <MetricCard key={key} metric={key} profile={profile} emptyLabel="No data" small />
+          ))}
+        </div>
+        <WorkplaceBadges profile={profile} />
+      </section>
+
+      {history.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Recent years (securities reports)</h2>
+          <HistoryTable years={history} />
+        </section>
       )}
+
+      <div className="space-y-1 text-xs text-black/60 dark:text-white/60">
+        <p>
+          FY = the fiscal year ending in that calendar year. Workplace figures
+          and average salary cover the filing company itself; employee count
+          and revenue are for the whole group.
+        </p>
+        <p>
+          Figures come from the securities report first. When a figure is
+          missing or looks wrong there, it is filled from the MHLW women&apos;s
+          advancement database and tagged <SourceTag />. Figures tagged{" "}
+          <CorrectedTag /> were read by hand from the securities report. ⚠
+          marks an unusual value (a possible data error or a different
+          reporting format).
+        </p>
+      </div>
     </>
   );
 }
+
+function MetricCard({
+  metric,
+  profile,
+  emptyLabel,
+  small,
+}: {
+  metric: MetricKey;
+  profile: EmployerProfile;
+  emptyLabel: string;
+  small?: boolean;
+}) {
+  return (
+    <div className="rounded-md border border-black/10 p-4 dark:border-white/15">
+      <div className="text-sm text-black/70 dark:text-white/70">{METRICS[metric].label}</div>
+      <div className={`mt-1 font-semibold ${small ? "text-lg" : "text-2xl"}`}>
+        <MetricValue metric={metric} value={profile.values[metric]} emptyLabel={emptyLabel} />
+      </div>
+      {METRICS[metric].help && (
+        <p className="mt-2 text-xs text-black/60 dark:text-white/60">{METRICS[metric].help}</p>
+      )}
+    </div>
+  );
+}
+
+// Year-by-year figures from the securities reports only.
+const HISTORY_METRICS = METRIC_GROUPS.flatMap((g) => g.keys).filter((key) => METRICS[key].edinet);
 
 function HistoryTable({ years }: { years: FinancialYear[] }) {
   return (
@@ -154,14 +216,20 @@ function HistoryTable({ years }: { years: FinancialYear[] }) {
           </tr>
         </thead>
         <tbody>
-          {ALL_METRICS.map((key) => (
+          {HISTORY_METRICS.map((key) => (
             <tr key={key} className="border-b border-black/5 last:border-0 dark:border-white/10">
               <td className="px-3 py-2 text-black/80 dark:text-white/80">{METRICS[key].label}</td>
-              {years.map((y) => (
-                <td key={y.fiscal_year} className="px-3 py-2 text-right tabular-nums">
-                  <MetricValue metric={key} value={y[key]} />
-                </td>
-              ))}
+              {years.map((y) => {
+                const raw = y[METRICS[key].edinet!];
+                return (
+                  <td key={y.fiscal_year} className="px-3 py-2 text-right tabular-nums">
+                    <MetricValue
+                      metric={key}
+                      value={raw != null ? { value: raw, source: "edinet", fiscalYear: y.fiscal_year } : undefined}
+                    />
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
