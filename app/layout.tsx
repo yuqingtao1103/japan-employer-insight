@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { CompareTray } from "@/components/compare-tray";
+import { MHLW_SOURCE } from "@/lib/mhlw";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/compare" className="hover:underline">
                 Compare
               </Link>
+              <Link href="/rank" className="hover:underline">
+                Rank
+              </Link>
             </nav>
           </div>
         </header>
@@ -63,6 +67,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </a>
               . Source data: annual securities reports (有価証券報告書) filed on
               the FSA&apos;s EDINET system.
+            </p>
+            <p>
+              Also uses{" "}
+              <a
+                href={MHLW_SOURCE.url}
+                className="underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {MHLW_SOURCE.name}
+              </a>{" "}
+              (as of {MHLW_SOURCE.asOf}), processed by Japan Employer Insight.
             </p>
             <p>
               Figures are extracted automatically and may contain errors. Check
