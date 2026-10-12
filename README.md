@@ -20,6 +20,16 @@ This data is public, but it is published only in Japanese and scattered across l
 - EDINET, the Financial Services Agency's electronic disclosure system for securities reports
 - Structured data derived from EDINET filings
 
+## Development
+
+Requires Node.js 20+.
+
+1. Install dependencies: `npm install`
+2. Copy `.env.example` to `.env.local` and set `EDINET_DB_API_KEY` (free key from https://edinetdb.jp/developers). Never commit `.env.local`.
+3. Start the dev server: `npm run dev`, then open http://localhost:3000
+
+See [docs/data-source-notes.md](docs/data-source-notes.md) for API fields, rate limits and data usage terms.
+
 ## Status
 
 In development. Live demo link and screenshots coming soon.

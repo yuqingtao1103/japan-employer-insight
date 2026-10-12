@@ -39,13 +39,21 @@ Workplace-related fields returned by `financials` (one row per `fiscal_year`):
 
 Coverage is documented as FY2020–FY2025. Fields are omitted (not `null`) when a company does not report them, so the app must handle missing values.
 
-### Gaps to verify or fill from elsewhere
+### Verified with real API calls (2026-10-12, Toyota E02144 and Sony E01777)
 
-- **Coverage of diversity fields** is not listed in the docs' coverage table. Mandatory disclosure only started with fiscal years ending on or after 2023-03-31, so expect gaps before FY2022. Verify with real calls once we have a key.
-- **Link to the source filing** (EDINET document ID / URL): not shown in the field list. Need to check whether `financials` or `companies/{code}` returns a document ID. If not, link to the company's EDINET page by `edinet_code`.
-- **English company names**: not confirmed in the docs. Check the `companies` response.
+- **English names**: `search`, `companies` and `companies/{code}` all return `name_en` (e.g. `TOYOTA MOTOR CORPORATION`) alongside `name_ja`. Search accepts Japanese and English queries.
+- **Source filing link**: every `financials` row with a filing has `doc_id` (e.g. `S100Y8NY`). The FSA viewer URL `https://disclosure2.edinet-fsa.go.jp/WZEK0040.aspx?{doc_id}` opens the original securities report.
+- **Fiscal year**: `fiscal_year` is the calendar year in which the fiscal year ends. Toyota `fiscal_year: 2026` = April 2025 – March 2026.
+- **Diversity coverage**: both companies have diversity figures only for FY2024–FY2026. FY2023 (the first mandatory year) is empty in EDINET DB even though the filings should contain it. Expect at most 3 years of history.
+- **Missing values**: fields are omitted, not `null`. Sony has no `male_parental_leave_ratio` in any year (holding company), so the UI must show "not disclosed".
+- **Scope**: the response's `meta.non_consolidated_fields` lists `avg_annual_salary` as non-consolidated (filing company only); `num_employees` is consolidated.
+- **Rate-limit headers**: responses include `x-ratelimit-remaining`, `x-ratelimit-monthly-remaining` and `x-ratelimit-reset`. The first month's limit is prorated (1,800 for a key created on 2026-10-12).
+- **Unknown company**: `GET /companies/{code}` returns `404` with `{"error":{"code":"not_found",...}}`.
+
+### Still to fill from elsewhere
+
 - **えるぼし / くるみん certifications**: not provided by EDINET DB. These come from the Ministry of Health, Labour and Welfare and would need a separate source.
-- **Scope of figures**: diversity metrics in securities reports are reported for the filing company and, in some cases, major subsidiaries separately. Check which value EDINET DB returns.
+- **FY2023 diversity figures**: could be filled from the official EDINET API if we want a 4-year history.
 
 ## 2. Rate limits
 
