@@ -150,3 +150,11 @@ vite.config.ts.timestamp-*
 
 # Local notes
 CLAUDE.md
+
+# Next.js
+next-env.d.ts
+/build
+.vercel
+*.pem
+.DS_Store
+.pnpm-debug.log*
