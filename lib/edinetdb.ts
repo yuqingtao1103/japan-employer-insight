@@ -3,8 +3,8 @@ import { cacheLife } from "next/cache";
 
 // Server-side client for the EDINET DB API (https://edinetdb.jp/developers).
 // The API key must never reach the browser, so this module is server-only.
-// Responses are cached for a day: the free plan allows 100 requests/day and
-// the underlying filings change at most once a year per company.
+// The free plan allows 100 requests/day, so responses are cached: search
+// results for a day, company data for a week (filings change about once a year).
 
 const BASE_URL = "https://edinetdb.jp/v1";
 
@@ -85,7 +85,7 @@ export async function searchCompanies(query: string): Promise<CompanySummary[]> 
 
 export async function getCompany(edinetCode: string): Promise<CompanyDetail | null> {
   "use cache";
-  cacheLife("days");
+  cacheLife("weeks");
   try {
     return await request<CompanyDetail>(`/companies/${edinetCode}`);
   } catch (error) {
@@ -96,7 +96,7 @@ export async function getCompany(edinetCode: string): Promise<CompanyDetail | nu
 
 export async function getFinancials(edinetCode: string): Promise<FinancialYear[]> {
   "use cache";
-  cacheLife("days");
+  cacheLife("weeks");
   try {
     const rows = await request<FinancialYear[]>(`/companies/${edinetCode}/financials`);
     return [...rows].sort((a, b) => a.fiscal_year - b.fiscal_year);
@@ -104,13 +104,4 @@ export async function getFinancials(edinetCode: string): Promise<FinancialYear[]
     if (error instanceof EdinetDbError && error.status === 404) return [];
     throw error;
   }
-}
-
-export function isEdinetCode(value: string): boolean {
-  return /^E\d{5}$/.test(value);
-}
-
-// Link to the original securities report on the FSA's EDINET viewer.
-export function edinetDocumentUrl(docId: string): string {
-  return `https://disclosure2.edinet-fsa.go.jp/WZEK0040.aspx?${docId}`;
 }
