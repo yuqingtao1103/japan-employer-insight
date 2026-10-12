@@ -61,7 +61,8 @@ Coverage is documented as FY2020–FY2025. Fields are omitted (not `null`) when 
 
 ### Still to fill from elsewhere
 
-- **えるぼし / くるみん certifications**: not provided by EDINET DB. These come from the Ministry of Health, Labour and Welfare and would need a separate source.
+- **えるぼし / くるみん certifications**: not provided by EDINET DB. Now taken from MHLW data (see section 4).
+- **Extraction gaps**: EDINET DB misses some values that are in the filings. Checked examples: Mitsubishi Corporation FY2026 male parental leave 52.6% (S100YB25) and Shiseido FY2025 91.1% (S100XSCU) are in the reports but missing in EDINET DB.
 - **FY2023 diversity figures**: could be filled from the official EDINET API if we want a 4-year history.
 
 ## 2. Rate limits
@@ -111,3 +112,46 @@ Recommended approach:
 
 - No SLA; the service may change or stop without notice. Keep the data layer swappable.
 - The official EDINET API from the FSA is a possible fallback or alternative source; its terms have not been reviewed yet.
+
+## 4. Second source: MHLW women's advancement database (open data)
+
+Reviewed 2026-10-12.
+
+- Source: 女性の活躍推進企業データベース オープンデータ, https://positive-ryouritsu.mhlw.go.jp/positivedb/opendata/
+- Terms: https://positive-ryouritsu.mhlw.go.jp/positivedb/opendata/riyoukiyaku.html. Government of Japan Standard Terms of Use 2.0, compatible with CC BY 4.0. Copying, redistribution, modification and commercial use are allowed. **Attribution is required**, and processed data must say it was processed and must not look like it was made by the government. Numeric data and simple tables are not copyrighted at all.
+- Format: one CSV (UTF-8, ZIP, ~11 MB compressed / 91 MB raw, 66,003 rows, 236 columns), updated daily. The download page blocks scripted downloads (HTTP 403), so download it in a browser.
+- Content is entered by the companies themselves, so periods and scopes vary. Each row has the data period and "as of" date.
+
+Fields we use (all per company, filing company scope):
+
+| Field | Column | Listed-company coverage* |
+|---|---|---|
+| Male parental leave uptake | 5. 男女別の育児休業取得率-男性 | 69% |
+| Average monthly overtime (hours) | 6. 平均残業時間 | 53% |
+| Paid leave taken | 8.(1) 年次有給休暇の取得率 (fallback 8.(2) first category) | 24% (more with fallback) |
+| Female managers | 10. 管理職に占める女性労働者の割合 | 86% |
+| Female board members | 11. 役員に占める女性の割合 | 62% |
+| Women's pay vs. men's (all / regular / non-regular) | 14. 男女の賃金の差異 1–3 | 82% |
+| Remote work / flextime schemes | 在宅勤務・テレワーク / フレックスタイム制度 | flag only |
+| えるぼし / くるみん certifications | 企業認定等 | all rows |
+
+\* Share of the 2,302 rows that have a securities code. Many listed companies (e.g. Toyota, Mitsubishi Corporation) have no securities code in this data, so the real coverage is higher.
+
+Matching: rows are joined to EDINET companies by **corporate number (法人番号)**, which EDINET DB returns as `corporate_number`. Securities codes are often blank, so they are not used.
+
+Processing: `scripts/build-mhlw-data.mjs` keeps companies with 301+ employees that report at least one figure (15,412 companies), converts percentages to decimals and writes `data/mhlw-workplace.json` (~3.3 MB). This processed file is committed (allowed by the terms) and credited in the site footer and README.
+
+To refresh: download the full CSV (UTF-8 without BOM) from the open data page, unzip it, then run
+`node scripts/build-mhlw-data.mjs <csv> <YYYY-MM-DD>` with the "last updated" date shown on the page.
+
+## 5. What we do when a figure is missing
+
+Each figure goes through these steps, and the page shows which one it came from:
+
+1. **Securities report via EDINET DB** (default). Used if present and plausible.
+2. **Manual correction** (`lib/corrections.ts`, tagged "checked"). A value read by hand from the same securities report, with the EDINET document ID. Used only for pool companies where we confirmed EDINET DB missed or misread it (Shiseido parental leave, Mercari pay ratio).
+3. **MHLW open data** (tagged "MHLW"). Used if present and plausible. Periods may differ slightly from the securities report, so the period is shown on hover.
+4. **Implausible value** (shown with ⚠). Kept visible but excluded from best/weakest markers and from ranking.
+5. **No data** (shown as "No data" / "—"). Never treated as zero. Possible reasons: company below the legal size threshold, not reported, or not extracted. The source filing link is always shown so users can check.
+
+In the ranking, each factor is scored only among companies that have it; the total is a weighted average over the factors a company has. Companies with data for less than 60% of the chosen weight are listed separately as "Not enough data to rank" instead of being ranked.

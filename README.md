@@ -11,14 +11,16 @@ This data is public, but it is published only in Japanese and scattered across l
 ## What it does
 
 - **Side-by-side comparison** of up to 4 companies on mandatory workplace disclosures
-- **Personalized ranking**: set how much each metric matters to you and see employers ranked by a transparent, explainable score
+- **Personalized ranking**: set how much each factor (salary, overtime, paid leave, tenure, growth, diversity) matters to you and see employers ranked by a transparent, explainable score
 - **Bilingual (EN/ZH)** interface and plain-language explainers for Japan-specific concepts such as 総合職 / 一般職 and the えるぼし / くるみん certifications
 - **Traceable data**: every figure shows its fiscal year and links to its source filing
 
 ## Data sources
 
-- EDINET, the Financial Services Agency's electronic disclosure system for securities reports
-- Structured data derived from EDINET filings
+- EDINET, the Financial Services Agency's electronic disclosure system for securities reports, accessed through [EDINET DB](https://edinetdb.jp) (Powered by EDINET DB)
+- 女性の活躍推進企業データベースオープンデータ（2026年10月13日時点）（https://positive-ryouritsu.mhlw.go.jp/positivedb/opendata/）を加工して作成. MHLW open data on overtime, paid leave, parental leave and certifications, processed into `data/mhlw-workplace.json`
+
+How sources are combined and what happens when a figure is missing: [docs/data-source-notes.md](docs/data-source-notes.md).
 
 ## Development
 
