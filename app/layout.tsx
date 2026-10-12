@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+import { CompareTray } from "@/components/compare-tray";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,10 +32,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <header className="border-b border-black/10 dark:border-white/15">
-          <div className="mx-auto max-w-4xl px-4 py-4">
+          <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
             <Link href="/" className="font-semibold tracking-tight">
               Japan Employer Insight
             </Link>
+            <nav className="flex gap-4 text-sm">
+              <Link href="/" className="hover:underline">
+                Search
+              </Link>
+              <Link href="/compare" className="hover:underline">
+                Compare
+              </Link>
+            </nav>
           </div>
         </header>
 
@@ -61,6 +71,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </p>
           </div>
         </footer>
+
+        <Suspense>
+          <CompareTray />
+        </Suspense>
       </body>
     </html>
   );
