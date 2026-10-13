@@ -1,0 +1,43 @@
+name: Update company list
+
+# Refreshes data/listed-companies.json from the FSA's EDINET code list once a
+# month. The commit triggers a Vercel deploy. Can also be run by hand from the
+# Actions tab ("Run workflow").
+on:
+  schedule:
+    - cron: "0 0 2 * *" # 2nd of each month, 09:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download the EDINET code list
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/Edinetcode.zip" \
+            https://disclosure2dl.edinet-fsa.go.jp/searchdocument/codelist/Edinetcode.zip
+          unzip -o "$RUNNER_TEMP/Edinetcode.zip" -d "$RUNNER_TEMP/codelist"
+      - run: node scripts/build-company-index.mjs "$RUNNER_TEMP/codelist/EdinetcodeDlInfo.csv"
+      # The tests search the new list for known companies, so a broken
+      # download stops here instead of reaching the live site.
+      - run: npm test
+      - name: Commit if the list changed
+        run: |
+          if git diff --quiet -- data/listed-companies.json; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/listed-companies.json
+          git commit -m "Update listed company list"
+          git push
