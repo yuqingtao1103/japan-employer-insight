@@ -100,3 +100,8 @@ export async function getCompanyInfo(edinetCode: string): Promise<CompanyDetail 
   }
   return getCompany(edinetCode);
 }
+
+// Industry and corporate number of every listed company (for industry benchmarks).
+export function listedCompanies(): { industry: string; corporateNumber: string }[] {
+  return ENTRIES.map(({ industry, corporateNumber }) => ({ industry, corporateNumber }));
+}

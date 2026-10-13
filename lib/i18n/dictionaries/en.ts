@@ -65,6 +65,13 @@ export const en = {
     moreTitle: "Work-life balance, pay and growth",
     historyTitle: "Recent years (securities reports)",
     openFiling: "Open the source filing on EDINET",
+    benchmarkMedian: "{industry} median: {value}",
+    benchmarkCount: "{count} listed companies",
+    benchmarkAbove: "{diff} above the median",
+    benchmarkBelow: "{diff} below the median",
+    benchmarkSame: "About the same as the median",
+    benchmarkNote:
+      "Industry medians are calculated from MHLW data of listed companies in the same sector, shown when at least 5 companies report the figure.",
     scopeNote:
       "FY = the fiscal year ending in that calendar year. Workplace figures and average salary cover the filing company itself; employee count and revenue are for the whole group.",
   },
@@ -114,6 +121,8 @@ export const en = {
     hoursPerMonth: "{value} h/month",
     years: "{value} years",
     perYear: "{value} / year",
+    pointDiff: "{value} pt",
+    hoursDiff: "{value} h",
   },
   groups: {
     diversity: "Diversity",
@@ -240,6 +249,8 @@ export const en = {
     "海運業": "Marine transportation",
     "空運業": "Air transportation",
     "倉庫・運輸関連業": "Warehousing & logistics",
+    "倉庫・運輸関連": "Warehousing & logistics",
+    "外国法人・組合": "Foreign company",
     "情報・通信業": "Information & communication",
     "卸売業": "Wholesale trade",
     "小売業": "Retail trade",
@@ -319,6 +330,15 @@ export const en = {
           "Since 2019, overtime is capped by law at 45 hours a month and 360 hours a year in principle. The figure here is the company's reported average per employee per month.",
           "Full-time employees get at least 10 days of annual paid leave after six months, rising with years of service. The paid leave figure shows the share of those days employees actually took.",
           "These figures come from the MHLW women's advancement database, where companies publish them voluntarily, so many companies have no data.",
+        ],
+      },
+      {
+        id: "industry-median",
+        title: "How to read the industry median",
+        body: [
+          "Each figure on a company page is compared with the median of listed companies in the same Tokyo Stock Exchange sector (33 sectors, e.g. Transportation equipment). The median is the middle value: half the companies are above it and half below. It is used instead of the average so that a few extreme values do not distort it.",
+          "Medians are calculated from the MHLW women's advancement database and shown only when at least 5 companies in the sector report the figure. Green means better than the median, orange means worse (for overtime, fewer hours is better).",
+          "Sector norms differ a lot: overtime is higher in construction, and the share of female managers is higher in services and finance. Comparing with the sector is often fairer than comparing with all companies.",
         ],
       },
       {

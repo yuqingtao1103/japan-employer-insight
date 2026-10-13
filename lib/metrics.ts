@@ -25,7 +25,13 @@ type FinancialNumberKey = {
   [K in keyof FinancialYear]-?: NonNullable<FinancialYear[K]> extends number ? K : never;
 }[keyof FinancialYear];
 
-export type Units = { hoursPerMonth: string; years: string; perYear: string };
+export type Units = {
+  hoursPerMonth: string;
+  years: string;
+  perYear: string;
+  pointDiff: string;
+  hoursDiff: string;
+};
 
 // Labels and help text live in the dictionaries (lib/i18n/dictionaries).
 export type Metric = {

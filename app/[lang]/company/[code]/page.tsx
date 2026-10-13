@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { BenchmarkLine } from "@/components/benchmark-line";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
 import { MetricValue } from "@/components/metric-value";
@@ -118,7 +119,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
         {hasCore ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {CORE_METRICS.map((key) => (
-              <MetricCard key={key} metric={key} profile={profile} />
+              <MetricCard key={key} metric={key} profile={profile} industry={company.industry} />
             ))}
           </div>
         ) : (
@@ -140,7 +141,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
         <h2 className="text-lg font-semibold">{t.company.moreTitle}</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {MORE_METRICS.map((key) => (
-            <MetricCard key={key} metric={key} profile={profile} small />
+            <MetricCard key={key} metric={key} profile={profile} industry={company.industry} small />
           ))}
         </div>
         <WorkplaceBadges profile={profile} />
@@ -155,6 +156,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
 
       <div className="space-y-1 text-xs text-black/60 dark:text-white/60">
         <p>{t.company.scopeNote}</p>
+        <p>{t.company.benchmarkNote}</p>
         <p>
           {t.sources.note}{" "}
           <Link href={localePath(locale, "/guide#sources")} className="underline">
@@ -169,10 +171,12 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
 async function MetricCard({
   metric,
   profile,
+  industry,
   small,
 }: {
   metric: MetricKey;
   profile: EmployerProfile;
+  industry: string | null | undefined;
   small?: boolean;
 }) {
   const t = await getDictionary();
@@ -184,6 +188,7 @@ async function MetricCard({
         <MetricValue metric={metric} value={profile.values[metric]} emptyLabel={t.common.noData} />
       </div>
       {help && <p className="mt-2 text-xs text-black/60 dark:text-white/60">{help}</p>}
+      <BenchmarkLine metric={metric} value={profile.values[metric]} industry={industry} />
     </div>
   );
 }
