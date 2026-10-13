@@ -158,3 +158,6 @@ next-env.d.ts
 *.pem
 .DS_Store
 .pnpm-debug.log*
+
+# Local API response cache (lib/dev-cache.ts)
+/.cache/

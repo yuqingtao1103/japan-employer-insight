@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife } from "next/cache";
+import { readDevCache, writeDevCache } from "@/lib/dev-cache";
 
 // Server-side client for the EDINET DB API (https://edinetdb.jp/developers).
 // The API key must never reach the browser, so this module is server-only.
@@ -54,6 +55,9 @@ export type FinancialYear = {
 };
 
 async function request<T>(path: string): Promise<T> {
+  const cached = await readDevCache<T>(path);
+  if (cached !== undefined) return cached;
+
   const apiKey = process.env.EDINET_DB_API_KEY;
   if (!apiKey) {
     throw new EdinetDbError(
@@ -76,6 +80,7 @@ async function request<T>(path: string): Promise<T> {
   }
 
   const body = (await res.json()) as { data: T };
+  await writeDevCache(path, body.data);
   return body.data;
 }
 
