@@ -5,7 +5,7 @@ import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
 import { MetricValue } from "@/components/metric-value";
 import { FEATURED_COMPANIES } from "@/lib/companies";
-import { searchCompanies } from "@/lib/edinetdb";
+import { searchListedCompanies } from "@/lib/company-index";
 import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { CORE_METRICS } from "@/lib/metrics";
@@ -85,12 +85,8 @@ async function SearchForm({ defaultValue = "" }: { defaultValue?: string }) {
 async function SearchResults({ query }: { query: string }) {
   const locale = await getLocale();
   const t = await getDictionary();
-  let results;
-  try {
-    results = await searchCompanies(query);
-  } catch (error) {
-    return <DataError error={error} fallback={t.errors.search} />;
-  }
+  // Local search over the EDINET code list: no API requests.
+  const results = searchListedCompanies(query);
 
   if (results.length === 0) {
     return <p className="text-sm text-black/70 dark:text-white/70">{fmt(t.home.noResults, { query })}</p>;

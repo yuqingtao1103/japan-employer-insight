@@ -3,8 +3,8 @@ import { readDevCache, writeDevCache } from "@/lib/dev-cache";
 
 // Server-side client for the EDINET DB API (https://edinetdb.jp/developers).
 // The API key must never reach the browser, so this module is server-only.
-// The free plan allows 100 requests/day, so responses are cached: search
-// results for a day, company data for a week (filings change about once a year).
+// The free plan allows 100 requests/day, so responses are cached for a week
+// (filings change about once a year). Search runs locally (lib/company-index.ts).
 // Caching uses the fetch data cache, which on Vercel is persistent and shared
 // across server instances and deploys, and only stores successful responses.
 // (`use cache` is avoided here: errors thrown inside it, such as the daily
@@ -90,9 +90,6 @@ async function request<T>(path: string, revalidateSeconds: number): Promise<T> {
   return body.data;
 }
 
-export async function searchCompanies(query: string): Promise<CompanySummary[]> {
-  return request<CompanySummary[]>(`/search?q=${encodeURIComponent(query)}`, DAY);
-}
 
 export async function getCompany(edinetCode: string): Promise<CompanyDetail | null> {
   try {

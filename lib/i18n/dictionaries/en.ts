@@ -18,6 +18,8 @@ export const en = {
     edinetSource: ". Source data: annual securities reports (有価証券報告書) filed on the FSA's EDINET system.",
     mhlwPrefix: "Also uses",
     mhlwSuffix: "(as of {date}), processed by Japan Employer Insight.",
+    companyListPrefix: "Company list based on",
+    companyListSuffix: "({date}, PDL1.0), processed by Japan Employer Insight.",
     disclaimer:
       "Figures are extracted automatically and may contain errors. Check the original filing before relying on any number. This site is not investment advice.",
   },
@@ -37,7 +39,6 @@ export const en = {
   errors: {
     featured: "Some figures could not be loaded right now. Please try again later.",
     limit: "The daily data request limit has been reached. Please try again tomorrow.",
-    search: "Could not load search results. Please try again later.",
     company: "Could not load this company's data. Please try again later.",
     column: "Could not load data.",
   },

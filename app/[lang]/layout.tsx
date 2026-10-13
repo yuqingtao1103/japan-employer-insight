@@ -7,6 +7,7 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { fmt, HTML_LANG, LOCALES, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { COMPANY_LIST_SOURCE } from "@/lib/company-index";
 import { MHLW_SOURCE } from "@/lib/mhlw";
 import "../globals.css";
 
@@ -104,6 +105,18 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
                   {MHLW_SOURCE.name}
                 </a>{" "}
                 {fmt(t.footer.mhlwSuffix, { date: MHLW_SOURCE.asOf })}
+              </p>
+              <p>
+                {t.footer.companyListPrefix}{" "}
+                <a
+                  href={COMPANY_LIST_SOURCE.url}
+                  className="underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {COMPANY_LIST_SOURCE.name}
+                </a>{" "}
+                {fmt(t.footer.companyListSuffix, { date: COMPANY_LIST_SOURCE.asOf ?? "" })}
               </p>
               <p>{t.footer.disclaimer}</p>
             </div>

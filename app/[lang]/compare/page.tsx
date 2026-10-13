@@ -9,7 +9,8 @@ import { WorkplaceBadges } from "@/components/workplace-badges";
 import { compareHref, MAX_COMPARE, parseCompareParam } from "@/lib/compare";
 import { getCorrections } from "@/lib/corrections";
 import { edinetDocumentUrl } from "@/lib/edinet-code";
-import { getCompany, getFinancials, type CompanyDetail } from "@/lib/edinetdb";
+import { getCompanyInfo } from "@/lib/company-index";
+import { getFinancials, type CompanyDetail } from "@/lib/edinetdb";
 import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import {
@@ -44,7 +45,7 @@ export default async function ComparePage({ searchParams }: PageProps<"/[lang]/c
 
 async function loadColumn(code: string): Promise<Column | null> {
   try {
-    const [company, financials] = await Promise.all([getCompany(code), getFinancials(code)]);
+    const [company, financials] = await Promise.all([getCompanyInfo(code), getFinancials(code)]);
     if (!company) return null;
     const profile = buildProfile(financials, getMhlwRecord(company.corporate_number), getCorrections(code));
     return { code, ok: true, company, profile };

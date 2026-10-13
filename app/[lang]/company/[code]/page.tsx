@@ -8,7 +8,8 @@ import { MetricValue } from "@/components/metric-value";
 import { WorkplaceBadges } from "@/components/workplace-badges";
 import { getCorrections } from "@/lib/corrections";
 import { edinetDocumentUrl, isEdinetCode } from "@/lib/edinet-code";
-import { getCompany, getFinancials, type FinancialYear } from "@/lib/edinetdb";
+import { getCompanyInfo } from "@/lib/company-index";
+import { getFinancials, type FinancialYear } from "@/lib/edinetdb";
 import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import {
@@ -47,7 +48,7 @@ export async function generateMetadata({
   const { code } = await params;
   if (!isEdinetCode(code)) return {};
   try {
-    const company = await getCompany(code);
+    const company = await getCompanyInfo(code);
     return company ? { title: company.name_en || company.name } : {};
   } catch {
     // The page itself shows the error (e.g. daily API limit); keep the default title.
@@ -78,7 +79,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
 
   let company, financials;
   try {
-    [company, financials] = await Promise.all([getCompany(code), getFinancials(code)]);
+    [company, financials] = await Promise.all([getCompanyInfo(code), getFinancials(code)]);
   } catch (error) {
     return <DataError error={error} fallback={t.errors.company} />;
   }

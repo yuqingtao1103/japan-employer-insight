@@ -19,6 +19,8 @@ export const zh: Dictionary = {
     edinetSource: " 提供。原始数据：日本金融厅 EDINET 系统上的有价证券报告书（有価証券報告書）。",
     mhlwPrefix: "另使用",
     mhlwSuffix: "（{date} 时点），由 Japan Employer Insight 加工整理。",
+    companyListPrefix: "公司名单基于",
+    companyListSuffix: "（{date}，PDL1.0），由 Japan Employer Insight 加工整理。",
     disclaimer: "数据为自动提取，可能存在错误。引用任何数字前，请核对原始报告。本网站不构成投资建议。",
   },
   common: {
@@ -37,7 +39,6 @@ export const zh: Dictionary = {
   errors: {
     featured: "部分数据暂时无法加载，请稍后再试。",
     limit: "今天的数据调用次数已用完，请明天再试。",
-    search: "无法加载搜索结果，请稍后再试。",
     company: "无法加载该公司的数据，请稍后再试。",
     column: "无法加载数据。",
   },
