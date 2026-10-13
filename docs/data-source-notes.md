@@ -155,3 +155,29 @@ Each figure goes through these steps, and the page shows which one it came from:
 5. **No data** (shown as "No data" / "—"). Never treated as zero. Possible reasons: company below the legal size threshold, not reported, or not extracted. The source filing link is always shown so users can check.
 
 In the ranking, each factor is scored only among companies that have it; the total is a weighted average over the factors a company has. Companies with data for less than 60% of the chosen weight are listed separately as "Not enough data to rank" instead of being ranked.
+
+## 6. Gap audit of the 30 ranking companies (2026-10-12)
+
+Every factor used in the ranking was checked for all 30 companies. Where a figure was missing or came from MHLW, the latest securities report was read (sections 従業員の状況 and サステナビリティに関する考え方及び取組).
+
+**EDINET DB misses male parental leave often.** When the report has it, it usually matches MHLW (ORIX 98.4%, JAL 96.4%, Fujitsu 94.1%, Sony 84%, Keyence 84.7%, Mitsubishi Corporation 52.6%). Exceptions, now in `lib/corrections.ts`:
+
+| Company | Figure | Securities report | Other source | Doc ID |
+|---|---|---|---|---|
+| Astellas | Male parental leave FY2026 | 72.7% | MHLW 82.8% | S100YBPK |
+| LY Corporation | Male parental leave FY2026 | 100.0% | none | S100YBXD |
+| Shiseido | Male parental leave FY2025 | 91.1% | none | S100XSCU |
+| Mercari | Pay ratio FY2026 | 70.74% (reported as gap 29.26%) | MHLW 68.0% (older) | S100Z2BE |
+| Mercari | Paid leave FY2026 | 83.4% | MHLW 75.1% (FY2025) | S100Z2BE |
+| Oriental Land | Overtime FY2026 | 14h05m / month | none | S100YCJX |
+| Oriental Land | Paid leave FY2026 | 99.5% (regular employees) | none | S100YCJX |
+
+**Confirmed not published anywhere we can use** (not in the securities report, not in MHLW data):
+
+- Average overtime: Astellas, LY Corporation, Mercari, Shiseido, Nintendo, Ryohin Keikaku, Komatsu, Rakuten, Shin-Etsu, Keyence, CyberAgent.
+- Paid leave taken: Astellas, Hitachi, Ryohin Keikaku, Rakuten.
+- Female managers: Keyence (its report discloses only parental leave and the pay gap).
+
+**Flagged as unusual (⚠), kept but not ranked:** Nomura Research Institute overtime 0.0 h (MHLW; likely not measured under a discretionary work system), Komatsu paid leave 103.0% (MHLW; probably counts carried-over days).
+
+Kao and Oriental Land were missing from the first MHLW match because of name differences. Kao is listed as "花王株式会社（Kao Corporation）" and is now matched by corporate number 4010001034760; Oriental Land has no MHLW entry.
