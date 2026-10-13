@@ -1,0 +1,51 @@
+name: Report a data error / 报告数据错误
+description: A figure on the site looks wrong or is missing. / 网站上的数字有误或缺失。
+title: "Data error: "
+labels: ["data error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping keep the data accurate. Fill in what you can; English or Chinese is fine.
+        感谢你帮助改进数据质量。能填多少填多少，中文或英文都可以。
+  - type: input
+    id: company
+    attributes:
+      label: Company / 公司
+      description: Name and EDINET code, e.g. Toyota Motor (E02144)
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page / 页面
+      description: Link to the page where you saw the figure
+  - type: input
+    id: metric
+    attributes:
+      label: Which figure / 哪个数字
+      description: e.g. Male parental leave uptake, FY2026 / 例如：男性育儿假休假率，2026 财年
+    validations:
+      required: true
+  - type: input
+    id: shown
+    attributes:
+      label: Shown on the site / 网站显示的值
+      description: Leave blank if the site shows "No data" / 如果网站显示"暂无数据"，可留空
+  - type: input
+    id: correct
+    attributes:
+      label: Correct value / 正确的值
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source / 出处
+      description: Link to the securities report, company website or other source, and where in it / 有价证券报告书、公司官网等的链接，以及具体位置
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else / 其他说明
