@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
-import { CorrectedTag, MetricValue, SourceTag } from "@/components/metric-value";
+import { MetricValue } from "@/components/metric-value";
 import { WorkplaceBadges } from "@/components/workplace-badges";
+import { getCorrections } from "@/lib/corrections";
 import { edinetDocumentUrl, isEdinetCode } from "@/lib/edinet-code";
 import { getCompany, getFinancials, type FinancialYear } from "@/lib/edinetdb";
+import { fmt, localePath } from "@/lib/i18n/config";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 import {
   buildProfile,
   CORE_METRICS,
@@ -17,7 +20,6 @@ import {
   type EmployerProfile,
   type MetricKey,
 } from "@/lib/metrics";
-import { getCorrections } from "@/lib/corrections";
 import { getMhlwRecord } from "@/lib/mhlw";
 
 // Number of most recent fiscal years shown in the history table.
@@ -41,27 +43,31 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/company/[code]">): Promise<Metadata> {
+}: PageProps<"/[lang]/company/[code]">): Promise<Metadata> {
   const { code } = await params;
   if (!isEdinetCode(code)) return {};
   const company = await getCompany(code);
   return company ? { title: company.name_en || company.name } : {};
 }
 
-export default function CompanyPage({ params }: PageProps<"/company/[code]">) {
+export default async function CompanyPage({ params }: PageProps<"/[lang]/company/[code]">) {
+  const locale = await getLocale();
+  const t = await getDictionary();
   return (
     <div className="space-y-8">
-      <Link href="/" className="text-sm underline">
-        ← Back to search
+      <Link href={localePath(locale, "/")} className="text-sm underline">
+        {t.common.backToSearch}
       </Link>
-      <Suspense fallback={<p className="text-sm text-black/60 dark:text-white/60">Loading…</p>}>
+      <Suspense fallback={<p className="text-sm text-black/60 dark:text-white/60">{t.common.loading}</p>}>
         <CompanyDetails params={params} />
       </Suspense>
     </div>
   );
 }
 
-async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "params">) {
+async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]">, "params">) {
+  const locale = await getLocale();
+  const t = await getDictionary();
   const { code } = await params;
   if (!isEdinetCode(code)) notFound();
 
@@ -69,9 +75,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
   try {
     [company, financials] = await Promise.all([getCompany(code), getFinancials(code)]);
   } catch (error) {
-    return (
-      <DataError error={error} fallback="Could not load this company's data. Please try again later." />
-    );
+    return <DataError error={error} fallback={t.errors.company} />;
   }
   if (!company) notFound();
 
@@ -80,6 +84,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
   const hasCore = CORE_METRICS.some((key) => profile.values[key]);
   const filing = profile.latestFiling;
   const history = financials.filter(hasWorkplaceData).slice(-YEARS_SHOWN);
+  const industry = company.industry ? (t.industries[company.industry] ?? company.industry) : null;
 
   return (
     <>
@@ -87,7 +92,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{displayName}</h1>
           <p className="text-sm text-black/60 dark:text-white/60">
-            {[company.name_ja, company.industry, company.sec_code && `Securities code ${company.sec_code.slice(0, 4)}`]
+            {[company.name_ja, industry, company.sec_code && fmt(t.company.securitiesCode, { code: company.sec_code.slice(0, 4) })]
               .filter(Boolean)
               .join(" · ")}
           </p>
@@ -97,22 +102,21 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">
-          Mandatory disclosures{" "}
+          {t.company.mandatoryTitle}{" "}
           {filing && hasWorkplaceData(filing) && (
-            <span className="font-normal text-black/60 dark:text-white/60">(FY{filing.fiscal_year})</span>
+            <span className="font-normal text-black/60 dark:text-white/60">
+              ({fmt(t.common.fy, { year: filing.fiscal_year })})
+            </span>
           )}
         </h2>
         {hasCore ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {CORE_METRICS.map((key) => (
-              <MetricCard key={key} metric={key} profile={profile} emptyLabel="No data" />
+              <MetricCard key={key} metric={key} profile={profile} />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-black/70 dark:text-white/70">
-            No workplace diversity figures were found for this company.
-            Companies with 300 or fewer employees are not required to disclose them.
-          </p>
+          <p className="text-sm text-black/70 dark:text-white/70">{t.company.noCoreData}</p>
         )}
         {filing?.doc_id && (
           <a
@@ -121,16 +125,16 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
             rel="noopener noreferrer"
             className="inline-block text-sm underline"
           >
-            View the FY{filing.fiscal_year} securities report on EDINET ↗
+            {fmt(t.company.viewReport, { year: filing.fiscal_year })}
           </a>
         )}
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Work-life balance, pay and growth</h2>
+        <h2 className="text-lg font-semibold">{t.company.moreTitle}</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {MORE_METRICS.map((key) => (
-            <MetricCard key={key} metric={key} profile={profile} emptyLabel="No data" small />
+            <MetricCard key={key} metric={key} profile={profile} small />
           ))}
         </div>
         <WorkplaceBadges profile={profile} />
@@ -138,50 +142,42 @@ async function CompanyDetails({ params }: Pick<PageProps<"/company/[code]">, "pa
 
       {history.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Recent years (securities reports)</h2>
+          <h2 className="text-lg font-semibold">{t.company.historyTitle}</h2>
           <HistoryTable years={history} />
         </section>
       )}
 
       <div className="space-y-1 text-xs text-black/60 dark:text-white/60">
+        <p>{t.company.scopeNote}</p>
         <p>
-          FY = the fiscal year ending in that calendar year. Workplace figures
-          and average salary cover the filing company itself; employee count
-          and revenue are for the whole group.
-        </p>
-        <p>
-          Figures come from the securities report first. When a figure is
-          missing or looks wrong there, it is filled from the MHLW women&apos;s
-          advancement database and tagged <SourceTag />. Figures tagged{" "}
-          <CorrectedTag /> were read by hand from the securities report. ⚠
-          marks an unusual value (a possible data error or a different
-          reporting format).
+          {t.sources.note}{" "}
+          <Link href={localePath(locale, "/guide#sources")} className="underline">
+            {t.common.learnMore}
+          </Link>
         </p>
       </div>
     </>
   );
 }
 
-function MetricCard({
+async function MetricCard({
   metric,
   profile,
-  emptyLabel,
   small,
 }: {
   metric: MetricKey;
   profile: EmployerProfile;
-  emptyLabel: string;
   small?: boolean;
 }) {
+  const t = await getDictionary();
+  const { label, help } = t.metrics[metric];
   return (
     <div className="rounded-md border border-black/10 p-4 dark:border-white/15">
-      <div className="text-sm text-black/70 dark:text-white/70">{METRICS[metric].label}</div>
+      <div className="text-sm text-black/70 dark:text-white/70">{label}</div>
       <div className={`mt-1 font-semibold ${small ? "text-lg" : "text-2xl"}`}>
-        <MetricValue metric={metric} value={profile.values[metric]} emptyLabel={emptyLabel} />
+        <MetricValue metric={metric} value={profile.values[metric]} emptyLabel={t.common.noData} />
       </div>
-      {METRICS[metric].help && (
-        <p className="mt-2 text-xs text-black/60 dark:text-white/60">{METRICS[metric].help}</p>
-      )}
+      {help && <p className="mt-2 text-xs text-black/60 dark:text-white/60">{help}</p>}
     </div>
   );
 }
@@ -189,13 +185,14 @@ function MetricCard({
 // Year-by-year figures from the securities reports only.
 const HISTORY_METRICS = METRIC_GROUPS.flatMap((g) => g.keys).filter((key) => METRICS[key].edinet);
 
-function HistoryTable({ years }: { years: FinancialYear[] }) {
+async function HistoryTable({ years }: { years: FinancialYear[] }) {
+  const t = await getDictionary();
   return (
     <div className="overflow-x-auto rounded-md border border-black/10 dark:border-white/15">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-black/10 dark:border-white/15">
-            <th className="px-3 py-2 text-left font-medium">Metric</th>
+            <th className="px-3 py-2 text-left font-medium">{t.common.metric}</th>
             {years.map((y) => (
               <th key={y.fiscal_year} className="px-3 py-2 text-right font-medium">
                 {y.doc_id ? (
@@ -204,12 +201,12 @@ function HistoryTable({ years }: { years: FinancialYear[] }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline"
-                    title="Open the source filing on EDINET"
+                    title={t.company.openFiling}
                   >
-                    FY{y.fiscal_year}
+                    {fmt(t.common.fy, { year: y.fiscal_year })}
                   </a>
                 ) : (
-                  `FY${y.fiscal_year}`
+                  fmt(t.common.fy, { year: y.fiscal_year })
                 )}
               </th>
             ))}
@@ -218,7 +215,7 @@ function HistoryTable({ years }: { years: FinancialYear[] }) {
         <tbody>
           {HISTORY_METRICS.map((key) => (
             <tr key={key} className="border-b border-black/5 last:border-0 dark:border-white/10">
-              <td className="px-3 py-2 text-black/80 dark:text-white/80">{METRICS[key].label}</td>
+              <td className="px-3 py-2 text-black/80 dark:text-white/80">{t.metrics[key].label}</td>
               {years.map((y) => {
                 const raw = y[METRICS[key].edinet!];
                 return (

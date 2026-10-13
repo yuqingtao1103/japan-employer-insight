@@ -1,5 +1,6 @@
 import type { FinancialYear } from "@/lib/edinetdb";
 import { formatNumber, formatPercent, formatYen } from "@/lib/format";
+import { fmt } from "@/lib/i18n/config";
 import type { MhlwRecord } from "@/lib/mhlw";
 
 export type MetricKey =
@@ -24,11 +25,12 @@ type FinancialNumberKey = {
   [K in keyof FinancialYear]-?: NonNullable<FinancialYear[K]> extends number ? K : never;
 }[keyof FinancialYear];
 
+export type Units = { hoursPerMonth: string; years: string; perYear: string };
+
+// Labels and help text live in the dictionaries (lib/i18n/dictionaries).
 export type Metric = {
   key: MetricKey;
-  label: string;
-  help?: string;
-  format: (value: number | null | undefined) => string | null;
+  format: (value: number, units: Units) => string;
   // Values outside this range are likely extraction errors (e.g. a parental
   // leave rate of 10,000%) or reported in a different format (e.g. Mercari
   // files the pay gap as a difference, 29%, rather than a ratio). They are
@@ -44,16 +46,14 @@ export type Metric = {
   higherIsBetter?: boolean;
 };
 
-const formatHours = (v: number | null | undefined) => (v == null ? null : `${v.toFixed(1)} h/month`);
-const formatYears = (v: number | null | undefined) => (v == null ? null : `${v.toFixed(1)} years`);
-const formatGrowth = (v: number | null | undefined) =>
-  v == null ? null : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}% / year`;
+const formatHours = (v: number, u: Units) => fmt(u.hoursPerMonth, { value: v.toFixed(1) });
+const formatYears = (v: number, u: Units) => fmt(u.years, { value: v.toFixed(1) });
+const formatGrowth = (v: number, u: Units) =>
+  fmt(u.perYear, { value: `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%` });
 
 export const METRICS: Record<MetricKey, Metric> = {
   female_manager_ratio: {
     key: "female_manager_ratio",
-    label: "Female managers",
-    help: "Share of managers who are women.",
     format: formatPercent,
     plausible: [0, 1],
     edinet: "female_manager_ratio",
@@ -62,8 +62,6 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   male_parental_leave_ratio: {
     key: "male_parental_leave_ratio",
-    label: "Male parental leave uptake",
-    help: "Men who took parental leave, relative to men whose child was born that year. Can exceed 100%.",
     format: formatPercent,
     plausible: [0, 5],
     edinet: "male_parental_leave_ratio",
@@ -72,8 +70,6 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   gender_pay_gap_all: {
     key: "gender_pay_gap_all",
-    label: "Women's pay vs. men's",
-    help: "Women's average pay as a share of men's, all employees. 100% means equal pay.",
     format: formatPercent,
     plausible: [0.35, 1.5],
     edinet: "gender_pay_gap_all",
@@ -82,7 +78,6 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   gender_pay_gap_regular: {
     key: "gender_pay_gap_regular",
-    label: "Women's pay vs. men's (regular)",
     format: formatPercent,
     plausible: [0.35, 1.5],
     edinet: "gender_pay_gap_regular",
@@ -91,7 +86,6 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   gender_pay_gap_nonregular: {
     key: "gender_pay_gap_nonregular",
-    label: "Women's pay vs. men's (non-regular)",
     format: formatPercent,
     plausible: [0.35, 1.5],
     edinet: "gender_pay_gap_nonregular",
@@ -100,7 +94,6 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   female_director_ratio: {
     key: "female_director_ratio",
-    label: "Female board members",
     format: formatPercent,
     plausible: [0, 1],
     edinet: "female_director_ratio",
@@ -109,17 +102,14 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   overtime_hours: {
     key: "overtime_hours",
-    label: "Average overtime",
-    help: "Average overtime per employee per month.",
     format: formatHours,
-    plausible: [0, 150],
+    // 0 hours usually means "not measured" rather than no overtime.
+    plausible: [0.5, 150],
     mhlw: "overtimeHours",
     higherIsBetter: false,
   },
   paid_leave_ratio: {
     key: "paid_leave_ratio",
-    label: "Paid leave taken",
-    help: "Share of annual paid leave days that employees actually took.",
     format: formatPercent,
     plausible: [0, 1],
     mhlw: "paidLeave",
@@ -127,31 +117,24 @@ export const METRICS: Record<MetricKey, Metric> = {
   },
   avg_annual_salary: {
     key: "avg_annual_salary",
-    label: "Average annual salary",
-    help: "Includes bonuses. Filing company only.",
     format: formatYen,
     edinet: "avg_annual_salary",
     higherIsBetter: true,
   },
   avg_tenure_years: {
     key: "avg_tenure_years",
-    label: "Average tenure",
-    help: "How long employees have stayed on average. A rough sign of retention.",
     format: formatYears,
     edinet: "avg_tenure_years",
     higherIsBetter: true,
   },
   revenue_growth: {
     key: "revenue_growth",
-    label: "Revenue growth",
-    help: "Average yearly revenue growth over the last 3 fiscal years (group).",
     format: formatGrowth,
     plausible: [-0.9, 3],
     higherIsBetter: true,
   },
   num_employees: {
     key: "num_employees",
-    label: "Employees (group)",
     format: formatNumber,
     edinet: "num_employees",
   },
@@ -164,9 +147,9 @@ export const CORE_METRICS: MetricKey[] = [
   "gender_pay_gap_all",
 ];
 
-export const METRIC_GROUPS: { title: string; keys: MetricKey[] }[] = [
+export const METRIC_GROUPS: { id: "diversity" | "workLife" | "payGrowth"; keys: MetricKey[] }[] = [
   {
-    title: "Diversity",
+    id: "diversity",
     keys: [
       "female_manager_ratio",
       "male_parental_leave_ratio",
@@ -176,8 +159,8 @@ export const METRIC_GROUPS: { title: string; keys: MetricKey[] }[] = [
       "female_director_ratio",
     ],
   },
-  { title: "Work-life balance", keys: ["overtime_hours", "paid_leave_ratio"] },
-  { title: "Pay, retention and growth", keys: ["avg_annual_salary", "avg_tenure_years", "revenue_growth", "num_employees"] },
+  { id: "workLife", keys: ["overtime_hours", "paid_leave_ratio"] },
+  { id: "payGrowth", keys: ["avg_annual_salary", "avg_tenure_years", "revenue_growth", "num_employees"] },
 ];
 
 export function isPlausible(key: MetricKey, value: number): boolean {

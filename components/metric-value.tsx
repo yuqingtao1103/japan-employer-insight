@@ -1,10 +1,12 @@
+import { fmt } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/server";
 import { isPlausible, METRICS, type MetricKey, type SourcedValue } from "@/lib/metrics";
 
 // Renders a metric value, "—" when there is no data, a warning when the value
 // falls outside the plausible range, and a small tag when it comes from MHLW
 // data or was corrected by hand instead of coming straight from the
 // securities report data.
-export function MetricValue({
+export async function MetricValue({
   metric,
   value,
   emptyLabel = "—",
@@ -13,30 +15,25 @@ export function MetricValue({
   value: SourcedValue | undefined;
   emptyLabel?: string;
 }) {
-  const formatted = value ? METRICS[metric].format(value.value) : null;
-  if (!value || formatted == null) {
+  const t = await getDictionary();
+  if (!value) {
     return (
-      <span
-        className="text-black/40 dark:text-white/40"
-        title="No data found in the securities report or the MHLW database."
-      >
+      <span className="text-black/40 dark:text-white/40" title={t.sources.noDataTitle}>
         {emptyLabel}
       </span>
     );
   }
 
+  const formatted = METRICS[metric].format(value.value, t.units);
   const tag =
     value.source === "mhlw" ? (
       <SourceTag period={value.period} />
     ) : value.corrected ? (
-      <CorrectedTag fiscalYear={value.fiscalYear} />
+      <CorrectedTag />
     ) : null;
   if (!isPlausible(metric, value.value)) {
     return (
-      <span
-        className="text-amber-700 dark:text-amber-400"
-        title="Unusual value: it may be a data error or reported in a different format. Check the source filing."
-      >
+      <span className="text-amber-700 dark:text-amber-400" title={t.sources.unusualTitle}>
         {formatted} ⚠{tag}
       </span>
     );
@@ -49,24 +46,26 @@ export function MetricValue({
   );
 }
 
-export function SourceTag({ period }: { period?: string }) {
+export async function SourceTag({ period }: { period?: string }) {
+  const t = await getDictionary();
   return (
     <sup
       className="ml-0.5 text-[0.6rem] font-normal text-sky-700 dark:text-sky-400"
-      title={`From the MHLW women's advancement database${period ? ` (period ${period})` : ""}`}
+      title={period ? fmt(t.sources.mhlwTitlePeriod, { period }) : t.sources.mhlwTitle}
     >
-      MHLW
+      {t.sources.mhlwTag}
     </sup>
   );
 }
 
-export function CorrectedTag({ fiscalYear }: { fiscalYear?: number }) {
+export async function CorrectedTag() {
+  const t = await getDictionary();
   return (
     <sup
       className="ml-0.5 text-[0.6rem] font-normal text-violet-700 dark:text-violet-400"
-      title={`Read by hand from the${fiscalYear ? ` FY${fiscalYear}` : ""} securities report because the automated data was missing or wrong.`}
+      title={t.sources.checkedTitle}
     >
-      checked
+      {t.sources.checkedTag}
     </sup>
   );
 }

@@ -1,33 +1,33 @@
+import { fmt } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/server";
 import type { EmployerProfile } from "@/lib/metrics";
 
 // Flexible work schemes and government certifications reported in MHLW data.
-export function WorkplaceBadges({ profile }: { profile: EmployerProfile }) {
+export async function WorkplaceBadges({ profile }: { profile: EmployerProfile }) {
+  const t = (await getDictionary()).badges;
   const badges: { label: string; help: string }[] = [];
-  if (profile.telework) {
-    badges.push({ label: "Remote work", help: "Has a remote work / work-from-home scheme." });
-  }
-  if (profile.flextime) {
-    badges.push({ label: "Flextime", help: "Has a flexible working hours scheme." });
-  }
+  if (profile.telework) badges.push({ label: t.remoteWork, help: t.remoteWorkHelp });
+  if (profile.flextime) badges.push({ label: t.flextime, help: t.flextimeHelp });
   if (profile.eruboshi) {
     badges.push({
-      label: profile.eruboshi === "platinum" ? "Platinum Eruboshi" : `Eruboshi level ${profile.eruboshi}`,
-      help: "えるぼし: government certification for advancing women in the workplace (levels 1–3, Platinum is the highest).",
+      label:
+        profile.eruboshi === "platinum"
+          ? t.platinumEruboshi
+          : fmt(t.eruboshiLevel, { level: profile.eruboshi }),
+      help: t.eruboshiHelp,
     });
   }
   if (profile.kurumin) {
     badges.push({
-      label: profile.kurumin === "platinum" ? "Platinum Kurumin" : "Kurumin",
-      help: "くるみん: government certification for supporting employees raising children.",
+      label: profile.kurumin === "platinum" ? t.platinumKurumin : t.kurumin,
+      help: t.kuruminHelp,
     });
   }
 
   if (badges.length === 0) {
     return (
       <p className="text-sm text-black/60 dark:text-white/60">
-        {profile.hasMhlw
-          ? "No flexible work schemes or certifications listed in MHLW data."
-          : "This company has not published data in the MHLW database."}
+        {profile.hasMhlw ? t.none : t.noMhlw}
       </p>
     );
   }

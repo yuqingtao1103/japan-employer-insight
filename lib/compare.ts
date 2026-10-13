@@ -1,9 +1,10 @@
 import { isEdinetCode } from "@/lib/edinet-code";
+import { localePath, type Locale } from "@/lib/i18n/config";
 
 export const MAX_COMPARE = 4;
 
-export function compareHref(codes: string[]): string {
-  return codes.length ? `/compare?c=${codes.join(",")}` : "/compare";
+export function compareHref(locale: Locale, codes: string[]): string {
+  return localePath(locale, codes.length ? `/compare?c=${codes.join(",")}` : "/compare");
 }
 
 // Parses `?c=E02144,E01777` into at most MAX_COMPARE unique, valid codes.

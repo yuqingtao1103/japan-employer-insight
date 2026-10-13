@@ -2,35 +2,38 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
-import { MetricValue, SourceTag } from "@/components/metric-value";
+import { MetricValue } from "@/components/metric-value";
 import { RankWeights } from "@/components/rank-weights";
 import { POOL_COMPANIES, type PoolCompany } from "@/lib/companies";
-import { METRICS } from "@/lib/metrics";
+import { fmt, localePath } from "@/lib/i18n/config";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getEmployerProfile } from "@/lib/profile";
-import { MIN_COVERAGE, parseWeights, rankEmployers, WEIGHT_LABELS, type RankedEmployer } from "@/lib/ranking";
+import { FACTORS, MIN_COVERAGE, parseWeights, rankEmployers, type RankedEmployer, type Weight } from "@/lib/ranking";
 
-export const metadata: Metadata = { title: "Rank employers" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getDictionary()).rank.metaTitle };
+}
 
-export default function RankPage({ searchParams }: PageProps<"/rank">) {
+export default async function RankPage({ searchParams }: PageProps<"/[lang]/rank">) {
+  const t = await getDictionary();
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Rank employers by what matters to you</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t.rank.title}</h1>
         <p className="text-sm text-black/70 dark:text-white/70">
-          {POOL_COMPANIES.length} well-known employers across industries. For
-          each factor, a company scores 0–100 by how many of the others it
-          beats. The total is the average of those scores, weighted by what you
-          choose below. Missing data is skipped, never counted as zero.
+          {fmt(t.rank.intro, { count: POOL_COMPANIES.length })}
         </p>
       </section>
-      <Suspense fallback={<p className="text-sm text-black/60 dark:text-white/60">Loading…</p>}>
+      <Suspense fallback={<p className="text-sm text-black/60 dark:text-white/60">{t.common.loading}</p>}>
         <RankContent searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function RankContent({ searchParams }: Pick<PageProps<"/rank">, "searchParams">) {
+async function RankContent({ searchParams }: Pick<PageProps<"/[lang]/rank">, "searchParams">) {
+  const locale = await getLocale();
+  const t = await getDictionary();
   const weights = parseWeights(await searchParams);
 
   const loaded = await Promise.all(
@@ -46,20 +49,18 @@ async function RankContent({ searchParams }: Pick<PageProps<"/rank">, "searchPar
   const failed = POOL_COMPANIES.length - items.length;
   const { ranked, insufficient } = rankEmployers(items, weights);
   const noWeights = Object.values(weights).every((w) => w === 0);
+  const labels = Object.fromEntries(FACTORS.map((f) => [f.id, t.metrics[f.metric]]));
 
   return (
     <>
-      <RankWeights weights={weights} />
+      <RankWeights weights={weights} labels={labels} />
 
       {failed > 0 && (
-        <p className="text-sm text-amber-700 dark:text-amber-400">
-          {failed} {failed === 1 ? "company" : "companies"} could not be loaded right now
-          (the daily data limit may have been reached) and {failed === 1 ? "is" : "are"} not shown.
-        </p>
+        <p className="text-sm text-amber-700 dark:text-amber-400">{fmt(t.rank.failed, { count: failed })}</p>
       )}
 
       {noWeights ? (
-        <p className="text-sm text-black/70 dark:text-white/70">Choose at least one factor to see a ranking.</p>
+        <p className="text-sm text-black/70 dark:text-white/70">{t.rank.chooseFactor}</p>
       ) : (
         <ol className="space-y-2">
           {ranked.map((entry, i) => (
@@ -70,10 +71,9 @@ async function RankContent({ searchParams }: Pick<PageProps<"/rank">, "searchPar
 
       {!noWeights && insufficient.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold">Not enough data to rank</h2>
+          <h2 className="text-sm font-semibold">{t.rank.insufficientTitle}</h2>
           <p className="text-xs text-black/60 dark:text-white/60">
-            These companies have data for less than {Math.round(MIN_COVERAGE * 100)}% of the
-            factors you weighted.
+            {fmt(t.rank.insufficientNote, { percent: Math.round(MIN_COVERAGE * 100) })}
           </p>
           <ul className="space-y-2">
             {insufficient.map((entry) => (
@@ -84,22 +84,31 @@ async function RankContent({ searchParams }: Pick<PageProps<"/rank">, "searchPar
       )}
 
       <p className="text-xs text-black/60 dark:text-white/60">
-        Scores are relative to the companies listed here, not to all employers
-        in Japan. Overtime and paid leave come from the MHLW women&apos;s
-        advancement database (tagged <SourceTag />); other figures come from the
-        latest securities reports.
+        {t.rank.footnote}{" "}
+        <Link href={localePath(locale, "/guide#sources")} className="underline">
+          {t.common.learnMore}
+        </Link>
       </p>
     </>
   );
 }
 
-function RankRow({ entry, position }: { entry: RankedEmployer<PoolCompany>; position?: number }) {
+async function RankRow({ entry, position }: { entry: RankedEmployer<PoolCompany>; position?: number }) {
+  const locale = await getLocale();
+  const t = await getDictionary();
+  const weightLabels: Record<Weight, string> = {
+    0: t.client.weight0,
+    1: t.client.weight1,
+    2: t.client.weight2,
+    3: t.client.weight3,
+  };
   const company = entry.item;
   const weighted = entry.factors.filter((f) => f.weight > 0);
   const strengths = weighted
     .filter((f) => f.percentile !== undefined && f.percentile >= 75)
     .sort((a, b) => b.percentile! - a.percentile!)
     .slice(0, 3);
+  const separator = locale === "zh" ? "、" : ", ";
 
   return (
     <li className="rounded-md border border-black/10 dark:border-white/15">
@@ -108,18 +117,18 @@ function RankRow({ entry, position }: { entry: RankedEmployer<PoolCompany>; posi
           {position ?? "–"}
         </div>
         <div className="min-w-0 flex-1 basis-40">
-          <Link href={`/company/${company.code}`} className="font-medium hover:underline">
+          <Link href={localePath(locale, `/company/${company.code}`)} className="font-medium hover:underline">
             {company.name}
           </Link>
           <div className="text-xs text-black/60 dark:text-white/60">
-            {company.nameJa} · {company.industry}
+            {company.nameJa} · {t.industries[company.industry]}
           </div>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-3">
           <div className="text-right">
             <div className="text-lg font-semibold tabular-nums">{Math.round(entry.score)}</div>
             <div className="text-[0.65rem] text-black/50 dark:text-white/50">
-              {Math.round(entry.coverage * 100)}% data
+              {fmt(t.rank.dataShare, { percent: Math.round(entry.coverage * 100) })}
             </div>
           </div>
           <CompareButton code={company.code} name={company.name} />
@@ -132,34 +141,36 @@ function RankRow({ entry, position }: { entry: RankedEmployer<PoolCompany>; posi
           )}
           {strengths.length > 0 && (
             <div className="text-xs text-black/60 dark:text-white/60">
-              Strong on: {strengths.map((f) => METRICS[f.metric].label.toLowerCase()).join(", ")}
+              {fmt(t.rank.strongOn, {
+                list: strengths.map((f) => t.metrics[f.metric].label).join(separator),
+              })}
             </div>
           )}
         </div>
       </div>
 
       <details className="border-t border-black/5 px-3 py-2 text-sm dark:border-white/10">
-        <summary className="cursor-pointer text-xs text-black/60 dark:text-white/60">How this score is calculated</summary>
+        <summary className="cursor-pointer text-xs text-black/60 dark:text-white/60">{t.rank.howCalculated}</summary>
         <table className="mt-2 w-full text-xs">
           <thead>
             <tr className="text-left text-black/60 dark:text-white/60">
-              <th className="py-1 font-medium">Factor</th>
-              <th className="py-1 text-right font-medium">Value</th>
-              <th className="py-1 text-right font-medium">Score</th>
-              <th className="py-1 text-right font-medium">Weight</th>
+              <th className="py-1 font-medium">{t.rank.factor}</th>
+              <th className="py-1 text-right font-medium">{t.rank.value}</th>
+              <th className="py-1 text-right font-medium">{t.rank.score}</th>
+              <th className="py-1 text-right font-medium">{t.rank.weight}</th>
             </tr>
           </thead>
           <tbody>
             {weighted.map((f) => (
               <tr key={f.factorId} className="border-t border-black/5 dark:border-white/10">
-                <td className="py-1">{METRICS[f.metric].label}</td>
+                <td className="py-1">{t.metrics[f.metric].label}</td>
                 <td className="py-1 text-right tabular-nums">
-                  <MetricValue metric={f.metric} value={f.value} emptyLabel="No data" />
+                  <MetricValue metric={f.metric} value={f.value} emptyLabel={t.common.noData} />
                 </td>
                 <td className="py-1 text-right tabular-nums">
-                  {f.percentile !== undefined ? Math.round(f.percentile) : "skipped"}
+                  {f.percentile !== undefined ? Math.round(f.percentile) : t.rank.skipped}
                 </td>
-                <td className="py-1 text-right">{WEIGHT_LABELS[f.weight]}</td>
+                <td className="py-1 text-right">{weightLabels[f.weight]}</td>
               </tr>
             ))}
           </tbody>

@@ -16,12 +16,6 @@ export const FACTORS: { id: string; metric: MetricKey; defaultWeight: Weight }[]
 export type Weight = 0 | 1 | 2 | 3;
 export type Weights = Record<string, Weight>;
 
-export const WEIGHT_LABELS: Record<Weight, string> = {
-  0: "Ignore",
-  1: "A little",
-  2: "Important",
-  3: "Very important",
-};
 
 // A company needs data for at least this share of the total weight to be ranked.
 export const MIN_COVERAGE = 0.6;
