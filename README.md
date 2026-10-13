@@ -20,6 +20,8 @@ This data is public, but it is published only in Japanese and scattered across l
 - EDINET, the Financial Services Agency's electronic disclosure system for securities reports, accessed through [EDINET DB](https://edinetdb.jp) (Powered by EDINET DB)
 - 女性の活躍推進企業データベースオープンデータ（2026年10月13日時点）（https://positive-ryouritsu.mhlw.go.jp/positivedb/opendata/）を加工して作成. MHLW open data on overtime, paid leave, parental leave and certifications, processed into `data/mhlw-workplace.json`
 
+- EDINET閲覧（提出）サイト EDINETコードリスト（https://disclosure2.edinet-fsa.go.jp/）をもとに作成 (PDL1.0). Listed company names, industries and corporate numbers, processed into `data/listed-companies.json` for local search
+
 How sources are combined and what happens when a figure is missing: [docs/data-source-notes.md](docs/data-source-notes.md).
 
 ## Development
@@ -40,7 +42,7 @@ The site runs on [Vercel](https://vercel.com) (Hobby plan) with the GitHub integ
 2. In **Settings → Environment Variables**, add `EDINET_DB_API_KEY` (type Secret) for Production.
 3. Deploy.
 
-EDINET DB responses are cached with the Next.js fetch data cache (search results for a day, company data for a week). On Vercel this cache is shared across server instances and kept across deploys, so the free plan's 100 requests per day is enough for normal traffic. When the limit is reached, pages show a message instead of failing.
+Company search runs locally on the EDINET code list, so it never uses the API. EDINET DB responses (company figures) are cached for a week with the Next.js fetch data cache. On Vercel this cache is shared across server instances and kept across deploys, so the free plan's 100 requests per day is enough for normal traffic. When the limit is reached, pages show a message instead of failing.
 
 ## Status
 

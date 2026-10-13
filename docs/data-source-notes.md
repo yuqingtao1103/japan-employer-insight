@@ -181,3 +181,14 @@ Every factor used in the ranking was checked for all 30 companies. Where a figur
 **Flagged as unusual (⚠), kept but not ranked:** Nomura Research Institute overtime 0.0 h (MHLW; likely not measured under a discretionary work system), Komatsu paid leave 103.0% (MHLW; probably counts carried-over days).
 
 Kao and Oriental Land were missing from the first MHLW match because of name differences. Kao is listed as "花王株式会社（Kao Corporation）" and is now matched by corporate number 4010001034760; Oriental Land has no MHLW entry.
+
+## 7. Third source: EDINET code list (local company search)
+
+Added 2026-10-12 so that searching does not spend EDINET DB requests (every new search used to cost one).
+
+- Source: the FSA's EDINET code list, `EdinetcodeDlInfo.csv` inside https://disclosure2dl.edinet-fsa.go.jp/searchdocument/codelist/Edinetcode.zip (Shift_JIS, ~11,400 filers, updated daily). It is offered as a download on the EDINET site; scraping the site is prohibited, so only this file is used.
+- Terms: EDINET content is under the Public Data License 1.0 (PDL1.0), which allows redistribution and processing with attribution, and requires saying the data was processed. Credited in the site footer and README.
+- Processing: `scripts/build-company-index.mjs` keeps the 3,816 listed companies (上場区分 = 上場) with name, English name, reading (kana), industry, securities code and corporate number, written to `data/listed-companies.json` (~600 KB).
+- Use: `lib/company-index.ts` searches names in Japanese, English or kana (hiragana is folded to katakana, full/half width and legal suffixes like 株式会社 / Co., Ltd. are ignored) and by securities code. It also supplies company names and corporate numbers for company and compare pages, so those pages call EDINET DB only for the financial figures.
+- To refresh: download the ZIP, unzip, run `node scripts/build-company-index.mjs <EdinetcodeDlInfo.csv>`.
+- Delisted companies are not in the list; their pages fall back to the EDINET DB API.
