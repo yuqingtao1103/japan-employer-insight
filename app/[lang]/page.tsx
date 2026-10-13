@@ -1,5 +1,6 @@
 import Form from "next/form";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
@@ -134,6 +135,8 @@ async function FeaturedCompanies() {
       }
     }),
   );
+  // Don't save a page with missing cards as static; retry on the next request.
+  if (cards.some((card) => !card.profile)) await connection();
 
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
