@@ -35,6 +35,7 @@ export const zh: Dictionary = {
     home: "返回首页",
   },
   errors: {
+    featured: "部分数据暂时无法加载，请稍后再试。",
     limit: "今天的数据调用次数已用完，请明天再试。",
     search: "无法加载搜索结果，请稍后再试。",
     company: "无法加载该公司的数据，请稍后再试。",

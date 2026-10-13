@@ -35,6 +35,7 @@ export const en = {
     home: "Go to the home page",
   },
   errors: {
+    featured: "Some figures could not be loaded right now. Please try again later.",
     limit: "The daily data request limit has been reached. Please try again tomorrow.",
     search: "Could not load search results. Please try again later.",
     company: "Could not load this company's data. Please try again later.",

@@ -1,6 +1,5 @@
 import Form from "next/form";
 import Link from "next/link";
-import { connection } from "next/server";
 import { Suspense } from "react";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
@@ -130,15 +129,17 @@ async function FeaturedCompanies() {
     FEATURED_COMPANIES.map(async (company) => {
       try {
         return { company, profile: await getEmployerProfile(company.code, company.corporateNumber) };
-      } catch {
-        return { company, profile: undefined };
+      } catch (error) {
+        return { company, profile: undefined, error };
       }
     }),
   );
-  // Don't save a page with missing cards as static; retry on the next request.
-  if (cards.some((card) => !card.profile)) await connection();
+  const failed = cards.find((card) => card.error !== undefined);
 
   return (
+    <>
+    {/* DataError also stops a page with missing cards from being cached as static. */}
+    {failed && <DataError error={failed.error} fallback={t.errors.featured} />}
     <ul className="grid gap-3 sm:grid-cols-2">
       {cards.map(({ company, profile }) => (
         <li
@@ -168,5 +169,6 @@ async function FeaturedCompanies() {
         </li>
       ))}
     </ul>
+    </>
   );
 }
