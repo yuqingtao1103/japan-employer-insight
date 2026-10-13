@@ -32,6 +32,16 @@ Requires Node.js 20+.
 
 See [docs/data-source-notes.md](docs/data-source-notes.md) for API fields, rate limits and data usage terms.
 
+## Deployment
+
+The site runs on [Vercel](https://vercel.com) (Hobby plan) with the GitHub integration: every push to `main` deploys automatically.
+
+1. Import the GitHub repository in Vercel (framework preset: Next.js, no build settings to change).
+2. In **Settings → Environment Variables**, add `EDINET_DB_API_KEY` for Production and Preview.
+3. Deploy.
+
+EDINET DB responses are cached with the Next.js fetch data cache (search results for a day, company data for a week). On Vercel this cache is shared across server instances and kept across deploys, so the free plan's 100 requests per day is enough for normal traffic. When the limit is reached, pages show a message instead of failing.
+
 ## Status
 
 In development. Live demo link and screenshots coming soon.

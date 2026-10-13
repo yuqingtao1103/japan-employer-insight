@@ -104,7 +104,7 @@ Implication: fetching `financials` for all ~3,800 companies would take ~38 days 
 Recommended approach:
 
 1. Keep the API key in `.env.local` locally and in the hosting provider's environment variables. Call the API only from server-side code so the key never reaches the browser.
-2. Cache responses outside git (a git-ignored folder locally; framework-level caching with periodic revalidation in production).
+2. Cache responses outside git: `.cache/` locally during development (`lib/dev-cache.ts`), and the Next.js fetch data cache in production, revalidated daily (search) or weekly (company data).
 3. Show "Powered by EDINET DB" and a disclaimer (Terms §3: not investment advice, data may contain extraction errors) on the site.
 4. If we later want to commit a data snapshot (e.g. for a static demo), ask Cabocia for written permission first: edinetdb@cabocia.jp.
 
