@@ -12,6 +12,7 @@ This data is public, but it is published only in Japanese and scattered across l
 
 - **Side-by-side comparison** of up to 4 companies on mandatory workplace disclosures
 - **Personalized ranking**: set how much each factor (salary, overtime, paid leave, tenure, growth, diversity) matters to you and see employers ranked by a transparent, explainable score
+- **Browse by industry**: all ~1,900 listed companies with published workplace data, grouped by Tokyo Stock Exchange sector and sortable by each figure, with the sector median for comparison
 - **Bilingual (EN/ZH)** interface and plain-language explainers for Japan-specific concepts such as 総合職 / 一般職 and the えるぼし / くるみん certifications
 - **Traceable data**: every figure shows its fiscal year and links to its source filing
 
