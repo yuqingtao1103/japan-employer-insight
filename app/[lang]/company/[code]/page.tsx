@@ -24,6 +24,7 @@ import {
   type MetricKey,
 } from "@/lib/metrics";
 import { getMhlwRecord } from "@/lib/mhlw";
+import { reportIssueUrl } from "@/lib/site";
 
 // Number of most recent fiscal years shown in the history table.
 const YEARS_SHOWN = 3;
@@ -175,6 +176,19 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
       <div className="space-y-1 text-xs text-black/60 dark:text-white/60">
         <p>{t.company.scopeNote}</p>
         <p>{t.company.benchmarkNote}</p>
+        <p>
+          <a
+            href={reportIssueUrl({
+              company: `${displayName} (${company.edinet_code})`,
+              path: localePath(locale, `/company/${company.edinet_code}`),
+            })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            {t.company.reportError}
+          </a>
+        </p>
         <p>
           {t.sources.note}{" "}
           <Link href={localePath(locale, "/guide#sources")} className="underline">

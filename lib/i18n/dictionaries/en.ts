@@ -66,6 +66,7 @@ export const en = {
     moreTitle: "Work-life balance, pay and growth",
     historyTitle: "Recent years (securities reports)",
     openFiling: "Open the source filing on EDINET",
+    reportError: "Spot a wrong or missing figure? Report it on GitHub ↗",
     benchmarkMedian: "{industry} median: {value}",
     benchmarkCount: "{count} listed companies",
     benchmarkAbove: "{diff} above the median",

@@ -9,6 +9,7 @@ import { fmt, HTML_LANG, LOCALES, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { COMPANY_LIST_SOURCE } from "@/lib/company-index";
 import { MHLW_SOURCE } from "@/lib/mhlw";
+import { siteUrl } from "@/lib/site";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -27,10 +28,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
-  // Vercel sets VERCEL_PROJECT_PRODUCTION_URL (without protocol) on deployments.
-  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   return {
-    metadataBase: new URL(host ? `https://${host}` : "http://localhost:3000"),
+    metadataBase: new URL(siteUrl()),
     title: { default: t.site.name, template: `%s | ${t.site.name}` },
     description: t.site.description,
     openGraph: { siteName: t.site.name, type: "website" },

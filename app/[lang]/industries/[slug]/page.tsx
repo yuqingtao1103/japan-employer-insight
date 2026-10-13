@@ -15,6 +15,7 @@ import {
   type SortDirection,
 } from "@/lib/industry-data";
 import { METRICS, type MetricKey } from "@/lib/metrics";
+import { reportIssueUrl } from "@/lib/site";
 
 const DEFAULT_SORT: MetricKey = "female_manager_ratio";
 
@@ -59,7 +60,19 @@ export default async function IndustryPage({ params, searchParams }: PageProps<"
         <IndustryTable industry={industry} slug={(await params).slug} searchParams={searchParams} />
       </Suspense>
 
-      <p className="text-xs text-black/60 dark:text-white/60">{t.industryPages.note}</p>
+      <div className="space-y-1 text-xs text-black/60 dark:text-white/60">
+        <p>{t.industryPages.note}</p>
+        <p>
+          <a
+            href={reportIssueUrl({ path: localePath(locale, `/industries/${(await params).slug}`) })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            {t.company.reportError}
+          </a>
+        </p>
+      </div>
     </div>
   );
 }

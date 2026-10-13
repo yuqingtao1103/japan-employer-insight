@@ -64,6 +64,7 @@ export const zh: Dictionary = {
     moreTitle: "工作与生活平衡、薪资与增长",
     historyTitle: "近年数据（有价证券报告书）",
     openFiling: "在 EDINET 打开原始报告",
+    reportError: "发现数字有误或缺失？在 GitHub 上报告 ↗",
     benchmarkMedian: "{industry}中位数：{value}",
     benchmarkCount: "共 {count} 家上市公司",
     benchmarkAbove: "比中位数高 {diff}",
