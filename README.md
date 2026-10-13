@@ -44,4 +44,4 @@ EDINET DB responses are cached with the Next.js fetch data cache (search results
 
 ## Status
 
-In development. Live demo link and screenshots coming soon.
+Live at https://japan-employer-insight.vercel.app (English and Simplified Chinese).
