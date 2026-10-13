@@ -55,7 +55,7 @@ Company search runs locally on the EDINET code list, so it never uses the API. E
 ## Automatic updates
 
 - **Company list**: the "Update company list" GitHub Action downloads the EDINET code list on the 2nd of each month, rebuilds `data/listed-companies.json`, runs the tests and commits if anything changed. It can also be started by hand from the Actions tab.
-- **Ranking data**: Vercel Cron calls `/api/warm` every Monday at 01:00 UTC to load the 30 ranking companies into the cache. It needs a `CRON_SECRET` environment variable in Vercel (any long random string).
+- **Ranking data**: Vercel Cron calls `/api/warm` every Monday at 01:00 UTC to load the 30 ranking companies into the cache. It does the same as opening the ranking page and reuses cached data, so it needs no secret; setting a `CRON_SECRET` environment variable in Vercel optionally restricts it to Vercel Cron.
 - **MHLW data**: the download page blocks scripts, so refresh it by hand every few months (see [docs/data-source-notes.md](docs/data-source-notes.md), section 4).
 
 ## Status

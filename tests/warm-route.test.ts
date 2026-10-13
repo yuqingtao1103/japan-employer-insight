@@ -15,16 +15,17 @@ afterEach(() => {
 });
 
 describe("GET /api/warm", () => {
-  it("rejects requests without the cron secret", async () => {
+  it("rejects requests without the secret when one is configured", async () => {
     vi.stubEnv("CRON_SECRET", "s3cret");
     expect((await GET(request())).status).toBe(401);
     expect((await GET(request("Bearer wrong"))).status).toBe(401);
     expect(getEmployerProfile).not.toHaveBeenCalled();
   });
 
-  it("rejects everything when no secret is configured", async () => {
+  it("is open when no secret is configured", async () => {
     vi.stubEnv("CRON_SECRET", "");
-    expect((await GET(request("Bearer "))).status).toBe(401);
+    getEmployerProfile.mockResolvedValue({});
+    expect((await GET(request())).status).toBe(200);
   });
 
   it("loads every ranking company and reports failures", async () => {
