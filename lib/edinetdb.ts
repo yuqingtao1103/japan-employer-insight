@@ -1,17 +1,19 @@
 import "server-only";
+import { cacheLife } from "next/cache";
 import { readDevCache, writeDevCache } from "@/lib/dev-cache";
 
 // Server-side client for the EDINET DB API (https://edinetdb.jp/developers).
 // The API key must never reach the browser, so this module is server-only.
 // The free plan allows 100 requests/day, so responses are cached for a week
 // (filings change about once a year). Search runs locally (lib/company-index.ts).
-// Caching uses the fetch data cache, which on Vercel is persistent and shared
-// across server instances and deploys, and only stores successful responses.
-// (`use cache` is avoided here: errors thrown inside it, such as the daily
-// limit, cannot be caught by the page.)
+// Responses are cached with `use cache: remote`, which on Vercel is the
+// Runtime Cache: shared across server instances and kept across deploys.
+// (The fetch data cache does not apply when Cache Components is enabled.)
+// Cached functions return a result instead of throwing, because errors thrown
+// inside a cache scope cannot be caught by the page; failures such as the
+// daily limit are cached for one minute only.
 
 const BASE_URL = "https://edinetdb.jp/v1";
-const DAY = 60 * 60 * 24;
 
 export class EdinetDbError extends Error {
   constructor(
@@ -58,54 +60,66 @@ export type FinancialYear = {
   revenue?: number | null; // consolidated, JPY
 };
 
-async function request<T>(path: string, revalidateSeconds: number): Promise<T> {
+type Result<T> = { ok: true; data: T } | { ok: false; status?: number; message: string };
+
+async function request<T>(path: string): Promise<Result<T>> {
   const cached = await readDevCache<T>(path);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined) return { ok: true, data: cached };
 
   const apiKey = process.env.EDINET_DB_API_KEY;
   if (!apiKey) {
-    throw new EdinetDbError(
-      "EDINET_DB_API_KEY is not set. Add it to .env.local.",
-    );
+    return { ok: false, message: "EDINET_DB_API_KEY is not set. Add it to .env.local." };
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "X-API-Key": apiKey },
-    cache: "force-cache",
-    next: { revalidate: revalidateSeconds },
-  });
-
-  if (res.status === 404) {
-    throw new EdinetDbError("Not found", 404);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { headers: { "X-API-Key": apiKey } });
+  } catch {
+    return { ok: false, message: "Could not reach EDINET DB" };
   }
+  if (res.status === 404) return { ok: false, status: 404, message: "Not found" };
   if (res.status === 429) {
-    throw new EdinetDbError("EDINET DB daily request limit reached", 429);
+    return { ok: false, status: 429, message: "EDINET DB daily request limit reached" };
   }
   if (!res.ok) {
-    throw new EdinetDbError(`EDINET DB request failed (${res.status})`, res.status);
+    return { ok: false, status: res.status, message: `EDINET DB request failed (${res.status})` };
   }
 
   const body = (await res.json()) as { data: T };
   await writeDevCache(path, body.data);
-  return body.data;
+  return { ok: true, data: body.data };
 }
 
+// Keeps successful (and "not found") answers for a week, failures for a minute.
+function cacheFor(result: Result<unknown>) {
+  if (result.ok || result.status === 404) cacheLife("weeks");
+  else cacheLife("seconds");
+}
+
+async function cachedCompany(edinetCode: string) {
+  "use cache: remote";
+  const result = await request<CompanyDetail>(`/companies/${edinetCode}`);
+  cacheFor(result);
+  return result;
+}
+
+async function cachedFinancials(edinetCode: string) {
+  "use cache: remote";
+  const result = await request<FinancialYear[]>(`/companies/${edinetCode}/financials`);
+  cacheFor(result);
+  return result;
+}
 
 export async function getCompany(edinetCode: string): Promise<CompanyDetail | null> {
-  try {
-    return await request<CompanyDetail>(`/companies/${edinetCode}`, 7 * DAY);
-  } catch (error) {
-    if (error instanceof EdinetDbError && error.status === 404) return null;
-    throw error;
-  }
+  const result = await cachedCompany(edinetCode);
+  if (result.ok) return result.data;
+  if (result.status === 404) return null;
+  throw new EdinetDbError(result.message, result.status);
 }
 
 export async function getFinancials(edinetCode: string): Promise<FinancialYear[]> {
-  try {
-    const rows = await request<FinancialYear[]>(`/companies/${edinetCode}/financials`, 7 * DAY);
-    return [...rows].sort((a, b) => a.fiscal_year - b.fiscal_year);
-  } catch (error) {
-    if (error instanceof EdinetDbError && error.status === 404) return [];
-    throw error;
-  }
+  const result = await cachedFinancials(edinetCode);
+  if (result.ok) return [...result.data].sort((a, b) => a.fiscal_year - b.fiscal_year);
+  if (result.status === 404) return [];
+  throw new EdinetDbError(result.message, result.status);
 }
