@@ -25,6 +25,10 @@ This data is public, but it is published only in Japanese and scattered across l
 
 How sources are combined and what happens when a figure is missing: [docs/data-source-notes.md](docs/data-source-notes.md).
 
+## Reporting a data error
+
+Every company and industry page has a "Report a data error" link. It opens a GitHub issue form (`.github/ISSUE_TEMPLATE/data-error.yml`) with the company and page filled in; reports get the `data error` label. Confirmed fixes go into `lib/corrections.ts` with the filing's document ID.
+
 ## Development
 
 Requires Node.js 20+.
