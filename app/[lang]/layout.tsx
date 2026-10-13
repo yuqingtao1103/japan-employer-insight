@@ -33,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: t.site.name, template: `%s | ${t.site.name}` },
     description: t.site.description,
     openGraph: { siteName: t.site.name, type: "website" },
+    twitter: { card: "summary_large_image" },
   };
 }
 
