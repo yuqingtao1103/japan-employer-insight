@@ -64,6 +64,9 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
                 <Link href={localePath(locale, "/rank")} className="hover:underline">
                   {t.nav.rank}
                 </Link>
+                <Link href={localePath(locale, "/industries")} className="hover:underline">
+                  {t.nav.industries}
+                </Link>
                 <Link href={localePath(locale, "/guide")} className="hover:underline">
                   {t.nav.guide}
                 </Link>

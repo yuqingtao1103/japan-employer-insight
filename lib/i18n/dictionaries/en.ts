@@ -10,6 +10,7 @@ export const en = {
     compare: "Compare",
     rank: "Rank",
     guide: "Guide",
+    industries: "Industries",
     switchLanguage: "中文",
     switchLanguageLabel: "切换到简体中文",
   },
@@ -143,6 +144,21 @@ export const en = {
     kuruminHelp: "くるみん: government certification for supporting employees raising children.",
     none: "No flexible work schemes or certifications listed in MHLW data.",
     noMhlw: "This company has not published data in the MHLW database.",
+  },
+  industryPages: {
+    title: "Browse by industry",
+    metaTitle: "Industries",
+    intro:
+      "Explore listed companies by Tokyo Stock Exchange sector and sort them by the workplace figures that matter to you. These pages use the MHLW women's advancement database, so they cost nothing to load and cover far more companies than the ranking.",
+    companiesWithData: "{count} companies with data",
+    back: "← All industries",
+    pageIntro: "{count} listed companies in this sector publish workplace data in the MHLW database. Click a column title to sort; click again to reverse.",
+    company: "Company",
+    medianRow: "Industry median",
+    note:
+      "Figures on this page come from the MHLW women's advancement database (reported by the companies, filing company only). Company pages use the securities report first, so their numbers can differ slightly. ⚠ marks an unusual value; missing and unusual values are listed last.",
+    sortAscending: "Sort lowest first",
+    sortDescending: "Sort highest first",
   },
   compare: {
     title: "Compare employers",

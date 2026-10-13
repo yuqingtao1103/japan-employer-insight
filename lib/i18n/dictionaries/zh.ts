@@ -11,6 +11,7 @@ export const zh: Dictionary = {
     compare: "对比",
     rank: "排名",
     guide: "指南",
+    industries: "行业",
     switchLanguage: "English",
     switchLanguageLabel: "Switch to English",
   },
@@ -128,6 +129,21 @@ export const zh: Dictionary = {
     kuruminHelp: "くるみん：日本政府对支持员工育儿企业的认证。",
     none: "厚生劳动省数据中未列出弹性工作制度或认证。",
     noMhlw: "这家公司没有在厚生劳动省数据库中公开数据。",
+  },
+  industryPages: {
+    title: "按行业浏览",
+    metaTitle: "行业",
+    intro:
+      "按东证行业分类浏览上市公司，并按你在意的职场指标排序。这些页面使用厚生劳动省女性活跃推进企业数据库，打开时不消耗数据额度，覆盖的公司也远多于排名页。",
+    companiesWithData: "{count} 家公司有数据",
+    back: "← 全部行业",
+    pageIntro: "该行业共有 {count} 家上市公司在厚生劳动省数据库中公开了职场数据。点击列标题可排序，再点一次可反向排序。",
+    company: "公司",
+    medianRow: "行业中位数",
+    note:
+      "本页数字来自厚生劳动省女性活跃推进企业数据库（由企业自行公开，仅限申报公司本体）。公司页优先使用有价证券报告书，因此数字可能略有不同。⚠ 表示数值异常；缺失和异常的数值排在最后。",
+    sortAscending: "从低到高排序",
+    sortDescending: "从高到低排序",
   },
   compare: {
     title: "对比雇主",

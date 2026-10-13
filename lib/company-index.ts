@@ -32,7 +32,8 @@ function normalize(value: string): string {
     .replace(/[\s・,.'’&\-()（）]/g, "");
 }
 
-const clean = (value: string) => value.replace(/　/g, " ").trim();
+// Full-width letters and spaces (e.g. "Ｕ－ＮＥＸＴ") become regular ones.
+const clean = (value: string) => value.normalize("NFKC").replace(/\s+/g, " ").trim();
 
 const ENTRIES: Entry[] = (data.companies as string[][]).map(
   ([code, name, nameEn, kana, industry, secCode, corporateNumber]) => ({
@@ -101,7 +102,16 @@ export async function getCompanyInfo(edinetCode: string): Promise<CompanyDetail 
   return getCompany(edinetCode);
 }
 
-// Industry and corporate number of every listed company (for industry benchmarks).
-export function listedCompanies(): { industry: string; corporateNumber: string }[] {
-  return ENTRIES.map(({ industry, corporateNumber }) => ({ industry, corporateNumber }));
+export type ListedCompany = Omit<Entry, "keys">;
+
+// Every listed company (for industry benchmarks and industry pages).
+export function listedCompanies(): ListedCompany[] {
+  return ENTRIES.map(({ code, name, nameEn, industry, secCode, corporateNumber }) => ({
+    code,
+    name,
+    nameEn,
+    industry,
+    secCode,
+    corporateNumber,
+  }));
 }

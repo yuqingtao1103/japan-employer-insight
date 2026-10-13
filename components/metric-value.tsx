@@ -10,10 +10,13 @@ export async function MetricValue({
   metric,
   value,
   emptyLabel = "—",
+  hideSource = false,
 }: {
   metric: MetricKey;
   value: SourcedValue | undefined;
   emptyLabel?: string;
+  // For pages where every value has the same source and the note says so.
+  hideSource?: boolean;
 }) {
   const t = await getDictionary();
   if (!value) {
@@ -25,12 +28,11 @@ export async function MetricValue({
   }
 
   const formatted = METRICS[metric].format(value.value, t.units);
-  const tag =
-    value.source === "mhlw" ? (
-      <SourceTag period={value.period} />
-    ) : value.corrected ? (
-      <CorrectedTag />
-    ) : null;
+  const tag = hideSource ? null : value.source === "mhlw" ? (
+    <SourceTag period={value.period} />
+  ) : value.corrected ? (
+    <CorrectedTag />
+  ) : null;
   if (!isPlausible(metric, value.value)) {
     return (
       <span className="text-amber-700 dark:text-amber-400" title={t.sources.unusualTitle}>

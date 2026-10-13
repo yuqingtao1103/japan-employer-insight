@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Fragment, Suspense } from "react";
 import { BenchmarkLine } from "@/components/benchmark-line";
 import { CompareButton } from "@/components/compare-button";
 import { DataError } from "@/components/data-error";
@@ -13,6 +13,7 @@ import { getCompanyInfo } from "@/lib/company-index";
 import { getFinancials, type FinancialYear } from "@/lib/edinetdb";
 import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { industrySlug } from "@/lib/industries";
 import {
   buildProfile,
   CORE_METRICS,
@@ -92,6 +93,7 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
   const filing = profile.latestFiling;
   const history = financials.filter(hasWorkplaceData).slice(-YEARS_SHOWN);
   const industry = company.industry ? (t.industries[company.industry] ?? company.industry) : null;
+  const slug = industrySlug(company.industry);
 
   return (
     <>
@@ -99,9 +101,25 @@ async function CompanyDetails({ params }: Pick<PageProps<"/[lang]/company/[code]
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{displayName}</h1>
           <p className="text-sm text-black/60 dark:text-white/60">
-            {[company.name_ja, industry, company.sec_code && fmt(t.company.securitiesCode, { code: company.sec_code.slice(0, 4) })]
+            {[
+              company.name_ja,
+              industry &&
+                (slug ? (
+                  <Link href={localePath(locale, `/industries/${slug}`)} className="underline">
+                    {industry}
+                  </Link>
+                ) : (
+                  industry
+                )),
+              company.sec_code && fmt(t.company.securitiesCode, { code: company.sec_code.slice(0, 4) }),
+            ]
               .filter(Boolean)
-              .join(" · ")}
+              .map((part, i) => (
+                <Fragment key={i}>
+                  {i > 0 && " · "}
+                  {part}
+                </Fragment>
+              ))}
           </p>
         </div>
         <CompareButton code={company.edinet_code} name={displayName} />

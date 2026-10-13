@@ -18,7 +18,7 @@ export function CompareButton({ code, name }: { code: string; name: string }) {
       disabled={full}
       title={full ? fmt(t.compareFull, { max: MAX_COMPARE }) : undefined}
       aria-pressed={selected}
-      className={`shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`shrink-0 whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         selected
           ? "border-foreground bg-foreground text-background"
           : "border-black/20 hover:border-black/60 dark:border-white/25 dark:hover:border-white/60"
