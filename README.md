@@ -61,7 +61,7 @@ The site runs on [Vercel](https://vercel.com) (Hobby plan) with the GitHub integ
 2. In **Settings → Environment Variables**, add `EDINET_DB_API_KEY` (type Secret) for Production.
 3. Deploy.
 
-Company search runs locally on the EDINET code list, so it never uses the API. EDINET DB responses (company figures) are cached for a week with the Next.js fetch data cache. On Vercel this cache is shared across server instances and kept across deploys, so the free plan's 100 requests per day is enough for normal traffic. When the limit is reached, pages show a message instead of failing.
+Company search runs locally on the EDINET code list, so it never uses the API. EDINET DB responses (company figures) are cached for a week with `use cache: remote` (Vercel Runtime Cache, kept across deploys); failed responses such as the daily limit are cached for one minute only. On Vercel this cache is shared across server instances and kept across deploys, so the free plan's 100 requests per day is enough for normal traffic. When the limit is reached, pages show a message instead of failing.
 
 ## Automatic updates
 
