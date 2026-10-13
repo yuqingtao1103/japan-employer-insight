@@ -22,9 +22,10 @@ import {
   type MetricKey,
 } from "@/lib/metrics";
 import { getMhlwRecord } from "@/lib/mhlw";
+import { pageAlternates } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).compare.metaTitle };
+  return { title: (await getDictionary()).compare.metaTitle, alternates: await pageAlternates("/compare") };
 }
 
 type Column =

@@ -9,9 +9,10 @@ import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getEmployerProfile } from "@/lib/profile";
 import { FACTORS, MIN_COVERAGE, parseWeights, rankEmployers, type RankedEmployer, type Weight } from "@/lib/ranking";
+import { pageAlternates } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).rank.metaTitle };
+  return { title: (await getDictionary()).rank.metaTitle, alternates: await pageAlternates("/rank") };
 }
 
 export default async function RankPage({ searchParams }: PageProps<"/[lang]/rank">) {

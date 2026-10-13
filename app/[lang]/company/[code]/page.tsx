@@ -25,6 +25,7 @@ import {
 } from "@/lib/metrics";
 import { getMhlwRecord } from "@/lib/mhlw";
 import { reportIssueUrl } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Number of most recent fiscal years shown in the history table.
 const YEARS_SHOWN = 3;
@@ -50,12 +51,13 @@ export async function generateMetadata({
 }: PageProps<"/[lang]/company/[code]">): Promise<Metadata> {
   const { code } = await params;
   if (!isEdinetCode(code)) return {};
+  const alternates = await pageAlternates(`/company/${code}`);
   try {
     const company = await getCompanyInfo(code);
-    return company ? { title: company.name_en || company.name } : {};
+    return company ? { title: company.name_en || company.name, alternates } : { alternates };
   } catch {
     // The page itself shows the error (e.g. daily API limit); keep the default title.
-    return {};
+    return { alternates };
   }
 }
 

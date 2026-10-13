@@ -16,6 +16,7 @@ import {
 } from "@/lib/industry-data";
 import { METRICS, type MetricKey } from "@/lib/metrics";
 import { reportIssueUrl } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 const DEFAULT_SORT: MetricKey = "female_manager_ratio";
 
@@ -26,10 +27,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/industries/[slug]">): Promise<Metadata> {
-  const industry = industryFromSlug((await params).slug);
+  const { slug } = await params;
+  const industry = industryFromSlug(slug);
   if (!industry) return {};
   const t = await getDictionary();
-  return { title: t.industries[industry] ?? industry };
+  return { title: t.industries[industry] ?? industry, alternates: await pageAlternates(`/industries/${slug}`) };
 }
 
 export default async function IndustryPage({ params, searchParams }: PageProps<"/[lang]/industries/[slug]">) {

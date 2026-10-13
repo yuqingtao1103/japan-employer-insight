@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -10,8 +11,13 @@ import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { CORE_METRICS } from "@/lib/metrics";
 import { getEmployerProfile } from "@/lib/profile";
+import { pageAlternates } from "@/lib/seo";
 
 const MAX_QUERY_LENGTH = 50;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { alternates: await pageAlternates("/") };
+}
 
 export default async function Home({ searchParams }: PageProps<"/[lang]">) {
   const t = await getDictionary();

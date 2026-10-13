@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { getDictionary } from "@/lib/i18n/server";
+import { pageAlternates } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).guide.metaTitle };
+  return { title: (await getDictionary()).guide.metaTitle, alternates: await pageAlternates("/guide") };
 }
 
 // Plain-language explainers for Japan-specific workplace terms and figures.

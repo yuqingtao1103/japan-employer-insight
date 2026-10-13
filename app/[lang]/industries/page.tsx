@@ -3,9 +3,13 @@ import Link from "next/link";
 import { fmt, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { industrySummaries } from "@/lib/industry-data";
+import { pageAlternates } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).industryPages.metaTitle };
+  return {
+    title: (await getDictionary()).industryPages.metaTitle,
+    alternates: await pageAlternates("/industries"),
+  };
 }
 
 export default async function IndustriesPage() {
