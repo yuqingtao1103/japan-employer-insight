@@ -25,6 +25,12 @@ This data is public, but it is published only in Japanese and scattered across l
 
 How sources are combined and what happens when a figure is missing: [docs/data-source-notes.md](docs/data-source-notes.md).
 
+## Search engines and link previews
+
+- `app/sitemap.ts` lists the main pages, all industry pages and the 30 ranking companies in both languages (other company pages are left out because each first visit uses an API request). `app/robots.ts` points crawlers to it.
+- Every page declares its English and Chinese versions (hreflang) and a canonical URL.
+- Shared links show a preview image: a site card by default, and for company pages the company name with the three mandatory figures (`opengraph-image.tsx`). Chinese and Japanese text uses Noto Sans SC, downloaded from Google Fonts with only the needed characters.
+
 ## Reporting a data error
 
 Every company and industry page has a "Report a data error" link. It opens a GitHub issue form (`.github/ISSUE_TEMPLATE/data-error.yml`) with the company and page filled in; reports get the `data error` label. Confirmed fixes go into `lib/corrections.ts` with the filing's document ID.
