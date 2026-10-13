@@ -29,6 +29,11 @@ export const zh: Dictionary = {
     metric: "指标",
     learnMore: "这是什么意思？",
   },
+  notFound: {
+    title: "页面不存在",
+    body: "你要找的页面或公司不存在。",
+    home: "返回首页",
+  },
   errors: {
     limit: "今天的数据调用次数已用完，请明天再试。",
     search: "无法加载搜索结果，请稍后再试。",
@@ -166,6 +171,9 @@ export const zh: Dictionary = {
     weight1: "有点在意",
     weight2: "重要",
     weight3: "非常重要",
+    errorTitle: "出错了",
+    errorBody: "页面暂时无法加载，请稍后再试。",
+    errorRetry: "重试",
   },
   industries: {
     automotive: "汽车",

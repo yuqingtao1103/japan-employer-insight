@@ -46,8 +46,13 @@ export async function generateMetadata({
 }: PageProps<"/[lang]/company/[code]">): Promise<Metadata> {
   const { code } = await params;
   if (!isEdinetCode(code)) return {};
-  const company = await getCompany(code);
-  return company ? { title: company.name_en || company.name } : {};
+  try {
+    const company = await getCompany(code);
+    return company ? { title: company.name_en || company.name } : {};
+  } catch {
+    // The page itself shows the error (e.g. daily API limit); keep the default title.
+    return {};
+  }
 }
 
 export default async function CompanyPage({ params }: PageProps<"/[lang]/company/[code]">) {

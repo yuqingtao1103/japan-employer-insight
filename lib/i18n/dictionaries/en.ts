@@ -29,6 +29,11 @@ export const en = {
     metric: "Metric",
     learnMore: "What does this mean?",
   },
+  notFound: {
+    title: "Page not found",
+    body: "The page or company you are looking for does not exist.",
+    home: "Go to the home page",
+  },
   errors: {
     limit: "The daily data request limit has been reached. Please try again tomorrow.",
     search: "Could not load search results. Please try again later.",
@@ -184,6 +189,9 @@ export const en = {
     weight1: "A little",
     weight2: "Important",
     weight3: "Very important",
+    errorTitle: "Something went wrong",
+    errorBody: "This page could not be loaded. Please try again in a moment.",
+    errorRetry: "Try again",
   },
   // Industry names: pool industry keys (lib/companies.ts) and the Tokyo Stock
   // Exchange's 33 sector names returned by EDINET DB.
