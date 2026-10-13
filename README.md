@@ -34,6 +34,14 @@ Requires Node.js 20+.
 
 See [docs/data-source-notes.md](docs/data-source-notes.md) for API fields, rate limits and data usage terms.
 
+### Checks
+
+- `npm test`: unit tests (Vitest) for search, data merging, ranking and industry medians
+- `npm run typecheck`: TypeScript
+- `npm run lint`: ESLint
+
+GitHub Actions runs all three plus a production build on every push to `main` and on pull requests.
+
 ## Deployment
 
 The site runs on [Vercel](https://vercel.com) (Hobby plan) with the GitHub integration: every push to `main` deploys automatically.
