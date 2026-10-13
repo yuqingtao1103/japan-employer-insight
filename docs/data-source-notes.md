@@ -192,3 +192,7 @@ Added 2026-10-12 so that searching does not spend EDINET DB requests (every new 
 - Use: `lib/company-index.ts` searches names in Japanese, English or kana (hiragana is folded to katakana, full/half width and legal suffixes like 株式会社 / Co., Ltd. are ignored) and by securities code. It also supplies company names and corporate numbers for company and compare pages, so those pages call EDINET DB only for the financial figures.
 - To refresh: download the ZIP, unzip, run `node scripts/build-company-index.mjs <EdinetcodeDlInfo.csv>`.
 - Delisted companies are not in the list; their pages fall back to the EDINET DB API.
+
+## 8. Industry medians
+
+`lib/benchmarks.ts` joins the EDINET code list (industry, corporate number) with MHLW data and computes, for each of the 33 Tokyo Stock Exchange sectors, the median of: female managers, male parental leave, pay ratio (all workers), female board members, overtime and paid leave. 1,885 of 3,816 listed companies have MHLW data. Implausible values are excluded, and a median is shown only when at least 5 companies in the sector report the figure (sectors such as air and marine transportation currently have fewer). Medians are computed at server start from the committed data files, so they cost no API requests. Salary, tenure and revenue growth have no industry median because those come only from the API.
