@@ -9,52 +9,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { parseCsv } from "./lib/csv.mjs";
 
 const [csvPath, asOf] = process.argv.slice(2);
 if (!csvPath || !/^\d{4}-\d{2}-\d{2}$/.test(asOf ?? "")) {
   console.error("Usage: node scripts/build-mhlw-data.mjs <csv> <YYYY-MM-DD>");
   process.exit(1);
-}
-
-// Minimal RFC 4180 parser: handles quoted fields, escaped quotes and newlines.
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else {
-          quoted = false;
-        }
-      } else {
-        field += c;
-      }
-    } else if (c === '"') {
-      quoted = true;
-    } else if (c === ",") {
-      row.push(field);
-      field = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else {
-      field += c;
-    }
-  }
-  if (field || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
 }
 
 const [header, ...rows] = parseCsv(fs.readFileSync(csvPath, "utf8"));
