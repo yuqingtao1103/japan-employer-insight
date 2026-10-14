@@ -196,3 +196,9 @@ Added 2026-10-12 so that searching does not spend EDINET DB requests (every new 
 ## 8. Industry medians
 
 `lib/benchmarks.ts` joins the EDINET code list (industry, corporate number) with MHLW data and computes, for each of the 33 Tokyo Stock Exchange sectors, the median of: female managers, male parental leave, pay ratio (all workers), female board members, overtime and paid leave. 1,885 of 3,816 listed companies have MHLW data. Implausible values are excluded, and a median is shown only when at least 5 companies in the sector report the figure (sectors such as air and marine transportation currently have fewer). Medians are computed at server start from the committed data files, so they cost no API requests. Salary, tenure and revenue growth have no industry median because those come only from the API.
+
+## 9. Cache check on production (2026-10-14)
+
+- Quota before: 83 left. Warming `/api/warm` loaded all 30 ranking companies and used 22 requests (8 were already cached by earlier visitors).
+- A second warm-up plus 11 views of the ranking, company, compare and home pages used 0 requests (the only one counted was the quota check itself).
+- The EDINET DB daily limit appears to reset at midnight Japan time (11:00 EDT / 10:00 EST); `x-ratelimit-reset` shows the current Japan date.
