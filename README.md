@@ -109,7 +109,7 @@ The site runs on [Vercel](https://vercel.com) (Hobby plan). Every push to `main`
 2. Add `EDINET_DB_API_KEY` as a Secret environment variable for Production.
 3. Deploy.
 
-Company figures from EDINET DB are cached for a week with `use cache: remote`, shared across server instances, so page views within a deployment use no API requests. A failed response, such as the daily limit, is cached for one minute only, and pages show a message instead of failing.
+Company figures from EDINET DB are cached for a week in Vercel's Runtime Cache (`getCache` from `@vercel/functions`), which is shared across server instances and kept across deployments, so normal page views use no API requests. Failed responses, such as the daily limit, are not cached, and pages show a message instead of failing.
 
 ## Automatic updates
 
@@ -125,7 +125,7 @@ Company figures from EDINET DB are cached for a week with `use cache: remote`, s
 
 - Diversity figures in EDINET DB cover the last 3 fiscal years; the first mandatory year (FY2023) is missing.
 - Overtime and paid leave are published voluntarily, so many companies have no data.
-- The API cache starts empty after each deployment, so the first page views after a deploy use API requests again (up to about 60 for the ranking page). The free EDINET DB plan allows 100 requests per day.
+- The free EDINET DB plan allows 100 requests per day. Once a company's figures are cached they are reused for a week, but opening many companies for the first time on the same day can reach the limit.
 
 ## Reporting a data error
 

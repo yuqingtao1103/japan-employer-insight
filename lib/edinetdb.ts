@@ -1,17 +1,16 @@
 import "server-only";
-import { cacheLife } from "next/cache";
+import { getCache } from "@vercel/functions";
+import { io } from "next/cache";
 import { readDevCache, writeDevCache } from "@/lib/dev-cache";
 
 // Server-side client for the EDINET DB API (https://edinetdb.jp/developers).
 // The API key must never reach the browser, so this module is server-only.
 // The free plan allows 100 requests/day, so responses are cached for a week
 // (filings change about once a year). Search runs locally (lib/company-index.ts).
-// Responses are cached with `use cache: remote`, which on Vercel is the
-// Runtime Cache: shared across server instances and kept across deploys.
-// (The fetch data cache does not apply when Cache Components is enabled.)
-// Cached functions return a result instead of throwing, because errors thrown
-// inside a cache scope cannot be caught by the page; failures such as the
-// daily limit are cached for one minute only.
+// Successful responses are kept for a week in Vercel's Runtime Cache
+// (getCache), which is shared across server instances and, unlike
+// `use cache: remote`, kept across deployments. Failures such as the daily
+// limit are not cached. Outside Vercel, getCache falls back to memory.
 
 const BASE_URL = "https://edinetdb.jp/v1";
 
@@ -90,35 +89,50 @@ async function request<T>(path: string): Promise<Result<T>> {
   return { ok: true, data: body.data };
 }
 
-// Keeps successful (and "not found") answers for a week, failures for a minute.
-function cacheFor(result: Result<unknown>) {
-  if (result.ok || result.status === 404) cacheLife("weeks");
-  else cacheLife("seconds");
-}
+const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
+// On the Hobby plan all projects of a team share one cache, so keys are namespaced.
+const cache = getCache({ namespace: "japan-employer-insight" });
+// Requests already in flight on this server instance, so simultaneous page
+// views of the same company make one API call.
+const inFlight = new Map<string, Promise<Result<unknown>>>();
 
-async function cachedCompany(edinetCode: string) {
-  "use cache: remote";
-  const result = await request<CompanyDetail>(`/companies/${edinetCode}`);
-  cacheFor(result);
-  return result;
-}
+async function cachedRequest<T>(path: string): Promise<Result<T>> {
+  // Company data is read per request, not built into static pages (the cache
+  // lookup also reads the current time, which prerendering does not allow).
+  await io();
+  try {
+    const hit = await cache.get(path);
+    if (hit != null) return { ok: true, data: hit as T };
+  } catch {
+    // Cache unavailable: fall through to the API.
+  }
 
-async function cachedFinancials(edinetCode: string) {
-  "use cache: remote";
-  const result = await request<FinancialYear[]>(`/companies/${edinetCode}/financials`);
-  cacheFor(result);
-  return result;
+  const pending = inFlight.get(path);
+  if (pending) return pending as Promise<Result<T>>;
+
+  const promise = request<T>(path).then(async (result) => {
+    if (result.ok) {
+      await cache.set(path, result.data, { ttl: CACHE_TTL_SECONDS, tags: ["edinetdb"] }).catch(() => {});
+    }
+    return result;
+  });
+  inFlight.set(path, promise);
+  try {
+    return await promise;
+  } finally {
+    inFlight.delete(path);
+  }
 }
 
 export async function getCompany(edinetCode: string): Promise<CompanyDetail | null> {
-  const result = await cachedCompany(edinetCode);
+  const result = await cachedRequest<CompanyDetail>(`/companies/${edinetCode}`);
   if (result.ok) return result.data;
   if (result.status === 404) return null;
   throw new EdinetDbError(result.message, result.status);
 }
 
 export async function getFinancials(edinetCode: string): Promise<FinancialYear[]> {
-  const result = await cachedFinancials(edinetCode);
+  const result = await cachedRequest<FinancialYear[]>(`/companies/${edinetCode}/financials`);
   if (result.ok) return [...result.data].sort((a, b) => a.fiscal_year - b.fiscal_year);
   if (result.status === 404) return [];
   throw new EdinetDbError(result.message, result.status);
