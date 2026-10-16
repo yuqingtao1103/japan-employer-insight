@@ -202,3 +202,4 @@ Added 2026-10-12 so that searching does not spend EDINET DB requests (every new 
 - Quota before: 83 left. Warming `/api/warm` loaded all 30 ranking companies and used 22 requests (8 were already cached by earlier visitors).
 - A second warm-up plus 11 views of the ranking, company, compare and home pages used 0 requests (the only one counted was the quota check itself).
 - The EDINET DB daily limit appears to reset at midnight Japan time (11:00 EDT / 10:00 EST); `x-ratelimit-reset` shows the current Japan date.
+- After a new production deployment (2026-10-14, commit c3e2ee0), viewing the same pages and warming again used the remaining 59 requests: `use cache: remote` entries are keyed by deployment, so each deploy starts with an empty cache. Concurrent first requests on several instances also fetch the same company more than once. Fix under consideration: Vercel's `getCache` API (`@vercel/functions`), which keeps entries across deployments.
