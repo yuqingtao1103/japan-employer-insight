@@ -18,7 +18,7 @@ This data is public, but it is in Japanese and spread across long filings. Inter
 
 ## Features
 
-| | |
+| Feature | What it does |
 |---|---|
 | 🔎 **Search** | Any of the ~3,800 listed companies by Japanese, English or kana name, or by securities code |
 | 🏢 **Company pages** | Mandatory disclosures plus overtime, paid leave, salary, tenure and growth, each compared with the **industry median** |
