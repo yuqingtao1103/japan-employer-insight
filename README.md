@@ -62,7 +62,7 @@ The full notes, including terms of use, coverage and a company-by-company gap au
 - [Next.js 16](https://nextjs.org) (App Router, Cache Components), React 19, TypeScript
 - Tailwind CSS 4
 - Vitest and GitHub Actions for tests and checks
-- Hosted on Vercel, with Vercel Cron for a weekly cache warm-up
+- Hosted on Vercel, with Vercel Cron for a weekly cache warm-up; commits that only change docs, tests or GitHub settings skip the deploy (`ignoreCommand` in `vercel.json`) so the cache is kept
 
 ## Getting started
 
